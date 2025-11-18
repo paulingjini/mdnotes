@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD Notes - Editor</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.css">
+    <!-- Il tema di default, verrà cambiato dinamicamente -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/theme/black.css" id="revealTheme">
+    
+    <!-- Highlight.js CSS per l'anteprima -->
+    <link reliat="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    
+    <style id="dynamicStyles">
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #252526;
+            --bg-tertiary: #2d2d30;
+            --text-primary: #d4d4d4;
+            --text-secondary: #808080;
+            --border: #3e3e42;
+            --accent: #007acc;
+            --font-family: 'Consolas', monospace;
+        }
+        
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .header {
+            background: var(--bg-secondary);
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .header h1 { 
+            font-size: 16px; 
+            font-weight: 600; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header .btn-group { display: flex; gap: 5px; }
+        
+        .toolbar {
+            background: var(--bg-tertiary);
+            padding: 8px 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .btn, .toolbar-btn, .icon-btn {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .btn:hover, .toolbar-btn:hover, .icon-btn:hover { 
+            background: var(--accent); 
+            border-color: var(--accent); 
+            color: white;
+        }
+        .btn.active, .toolbar-btn.active { 
+            background: var(--accent); 
+            color: white;
+        }
+
+        .icon-btn {
+            padding: 6px;
+            min-width: 30px;
+        }
+        
+        .toolbar-btn {
+            padding: 5px 8px;
+        }
+
+        .icon {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        /* Stili per la personalizzazione della toolbar */
+        body[data-toolbar-style="icon-only"] .toolbar-btn span { display: none; }
+        body[data-toolbar-style="text-only"] .toolbar-btn .icon { display: none; }
+        body[data-toolbar-style="icon-text"] .toolbar-btn { padding: 5px 10px; }
+
+        
+        .separator { width: 1px; height: 20px; background: var(--border); margin: 0 5px; }
+        
+        select, .btn-group { display: flex; gap: 5px; align-items: center; }
+        
+        select {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 6px;
+            font-size: 12px;
+            font-family: inherit;
+            border-radius: 4px;
+        }
+
+        .export-btn-group {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            min-width: 180px;
+            z-index: 100;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-top: 5px;
+        }
+
+        .dropdown-menu.show { display: block; }
+        .dropdown-item {
+            padding: 8px 15px;
+            font-size: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .dropdown-item:hover { background-color: var(--accent); }
+        
+        .main-container { 
+            display: flex; 
+            height: calc(100vh - 90px); 
+        }
+        
+        .file-manager {
+            width: 200px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .file-manager.hidden { display: none; }
+        .file-manager-header {
+            padding: 8px 10px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .file-list { flex: 1; overflow-y: auto; }
+        
+        .file-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .file-item:hover { background: var(--bg-tertiary); }
+        .file-item.active { background: var(--accent); color: white; }
+        .file-item .delete-btn { opacity: 0; background: none; border: none; cursor: pointer; }
+        .file-item:hover .delete-btn { opacity: 1; }
+        .file-item .delete-btn .icon:hover { color: #f44336; }
+        
+        .editor-panel, .preview-panel, .mindmap-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            min-width: 0;
+        }
+        
+        .editor-panel.hidden, .preview-panel.hidden, .mindmap-panel.hidden { display: none; }
+        
+        .preview-panel.fullscreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; border: none;
+        }
+        
+        .panel-header {
+            background: var(--bg-tertiary);
+            padding: 5px 10px;
+            font-size: 11px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+         .panel-header .icon-btn { padding: 2px; }
+
+        #mdToolbar {
+            background: var(--bg-secondary);
+            padding: 5px 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        #mdToolbar .btn {
+            font-size: 14px;
+            font-weight: bold;
+            padding: 4px 8px;
+            min-width: 28px;
+            text-align: center;
+        }
+        
+        #editor {
+            flex: 1;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: none;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+        
+        #preview {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--bg-primary);
+            font-size: 13px; /* Default size */
+        }
+        
+        /* Stili Markdown potenziati */
+        #preview h1 { font-size: 2em; margin: 0.67em 0; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: .3em; }
+        #preview h2 { font-size: 1.5em; margin: 0.83em 0; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: .3em; }
+        #preview h3 { font-size: 1.17em; margin: 1em 0; }
+        #preview p { margin: 1em 0; line-height: 1.7; }
+        #preview code:not(pre code) { background: var(--bg-tertiary); padding: .2em .4em; font-size: 85%; border-radius: 6px; }
+        #preview pre { background: var(--bg-tertiary); padding: 16px; overflow-x: auto; border-radius: 6px; }
+        #preview pre code { padding: 0; background: none; }
+        #preview blockquote { border-left: .25em solid var(--border); padding: 0 1em; color: var(--text-secondary); margin: 0; }
+        #preview ul, #preview ol { padding-left: 2em; margin: 1em 0; }
+        #preview table { border-collapse: collapse; margin: 1em 0; }
+        #preview th, #preview td { border: 1px solid var(--border); padding: 6px 13px; }
+        #preview th { font-weight: bold; background-color: var(--bg-tertiary); }
+        #preview tr:nth-child(2n) { background-color: var(--bg-secondary); }
+        
+        #mindmap { flex: 1; background: var(--bg-primary); }
+        #mindmap svg { width: 100%; height: 100%; }
+        
+        .status-bar {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 4px 20px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            padding: 20px; min-width: 400px; max-width: 90%; max-height: 80vh;
+            overflow-y: auto; border-radius: 8px;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-title { font-size: 16px; color: var(--accent); }
+        .modal-header .icon-btn { background: none; border: none; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block; margin-bottom: 5px; font-size: 12px; color: var(--text-secondary);
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 8px; background: var(--bg-primary);
+            border: 1px solid var(--border); color: var(--text-primary);
+            font-family: inherit; font-size: 13px; border-radius: 4px;
+        }
+        .form-group textarea { min-height: 200px; resize: vertical; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+        
+        .theme-preset {
+            display: inline-block; width: 60px; height: 40px; border: 2px solid var(--border);
+            cursor: pointer; margin-right: 10px; border-radius: 4px;
+        }
+        .theme-preset:hover { border-color: var(--accent); }
+        .theme-preset.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+        
+        /* Stili Help Modal */
+        #helpModal .modal-content { min-width: 60vw; }
+        #helpModal h2 { font-size: 1.2em; color: var(--accent); margin-top: 15px; margin-bottom: 10px; }
+        #helpModal p { font-size: 13px; line-height: 1.6; margin-bottom: 10px; }
+        #helpModal code { background: var(--bg-tertiary); padding: 2px 5px; border-radius: 4px; font-family: inherit; }
+        #helpModal kbd {
+            background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px;
+            padding: 3px 6px; font-size: 0.9em;
+        }
+        
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 5px; }
+        
+        #fileInput { display: none; }
+
+        /* Loading Spinner */
+        .spinner-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;
+            flex-direction: column; gap: 10px; color: var(--text-primary);
+        }
+        .spinner {
+            border: 4px solid var(--bg-tertiary); border-top: 4px solid var(--accent);
+            border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body data-toolbar-style="icon-only"> <!-- Default: icon-only -->
+    
+    <div class="header">
+        <h1 id="appTitle">
+            <svg class="icon" style="width:20px; height:20px" viewBox="0 0 24 24"><use href="#icon-edit"></use></svg>
+            <span>ITIL 4 Editor</span>
+        </h1>
+        <div class="btn-group">
+            <button class="btn" onclick="app.newFile()">+ New</button>
+            <button class="btn" onclick="document.getElementById('fileInput').click()">📁 Open</button>
+            <button class="icon-btn" onclick="app.showSettings()" title="Settings">
+                <svg class="icon"><use href="#icon-settings"></use></svg>
+            </button>
+            <button class="icon-btn" onclick="app.showHelp()" title="Help">
+                <svg class="icon"><use href="#icon-help"></use></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="app.toggleFileManager()" title="Toggle File Manager">
+            <svg class="icon"><use href="#icon-folder"></use></svg>
+            <span>Files</span>
+        </button>
+        <div class="separator"></div>
+        <div class="btn-group">
+            <button class="toolbar-btn active" id="btnEditor" onclick="app.toggleView('editor')" title="Editor">
+                <svg class="icon"><use href="#icon-edit"></use></svg>
+                <span>Editor</span>
+            </button>
+            <button class="toolbar-btn" id="btnPreview" onclick="app.toggleView('preview')" title="Preview">
+                <svg class="icon"><use href="#icon-eye"></use></svg>
+                <span>Preview</span>
+            </button>
+            <button class="toolbar-btn" id="btnMindmap" onclick="app.toggleView('mindmap')" title="Mindmap">
+                <svg class="icon"><use href="#icon-git-branch"></use></svg>
+                <span>Mindmap</span>
+            </button>
+        </div>
+        <div class="separator"></div>
+        <button class="toolbar-btn" onclick="app.saveFile()" title="Save">
+            <svg class="icon"><use href="#icon-save"></use></svg>
+            <span>Save</span>
+        </button>
+        <div class="export-btn-group">
+            <button class="toolbar-btn" onclick="app.toggleExportMenu()" title="Export">
+                <svg class="icon"><use href="#icon-download"></use></svg>
+                <span>Export</span>
+            </button>
+            <div class="dropdown-menu" id="exportMenu">
+                <div class="dropdown-item" onclick="app.exportAs('md')">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-file-text"></use></svg>
+                    <span>as Markdown (.md)</span>
+                </div>
+                <div class="dropdown-item" onclick="app.exportAs('html')">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-code"></use></svg>
+                    <span>as HTML (.html)</span>
+                </div>
+                <div class="dropdown-item" onclick="app.exportAs('pdf-preview')">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-file"></use></svg>
+                    <span>as PDF (Preview)</span>
+                </div>
+                <div class="dropdown-item" onclick="app.exportAs('pdf-slides')">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-image"></use></svg>
+                    <span>as PDF (Slides)</span>
+                </div>
+            </div>
+        </div>
+        <div class="separator"></div>
+        <button class="toolbar-btn" id="btnPresentation" onclick="app.togglePresentation()" title="Present">
+            <svg class="icon"><use href="#icon-play"></use></svg>
+            <span>Present</span>
+        </button>
+        <button class="toolbar-btn" onclick="app.showPresentationSettings()" title="Presentation Settings">
+            <svg class="icon"><use href="#icon-sliders"></use></svg>
+            <span>Slides</span>
+        </button>
+    </div>
+
+    <div class="main-container">
+        <div class="file-manager" id="fileManager">
+            <div class="file-manager-header">FILES</div>
+            <div class="file-list" id="fileList"></div>
+        </div>
+
+        <div class="editor-panel" id="editorPanel">
+            <div class="panel-header"><span>EDITOR</span></div>
+            <div id="mdToolbar">
+                <button class="btn" onclick="app.insertMarkdown('**', '**', 'bold')" title="Bold">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-bold"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('*', '*', 'italic')" title="Italic">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-italic"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('`', '`', 'code')" title="Code">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-code"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('\n> ', '', 'Quote')" title="Blockquote">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-quote"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('\n- ', '', 'List')" title="List">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-list"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('\n1. ', '', 'Ordered List')" title="Ordered List">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-ol"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('\n- [ ] ', '', 'Task')" title="Task List">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-check-square"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('[', '](url)', 'link')" title="Link">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-link"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('![', '](url)', 'alt')" title="Image">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-image"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('\n```\n', '\n```\n', 'code block')" title="Code Block">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-code-block"></use></svg>
+                </button>
+            </div>
+            <textarea id="editor" spellcheck="false"></textarea>
+        </div>
+
+        <div class="preview-panel hidden" id="previewPanel">
+            <div class="panel-header">
+                <span id="previewTitle">PREVIEW</span>
+                <button class="icon-btn" onclick="app.toggleFullscreen()" title="Fullscreen">
+                    <svg class="icon"><use href="#icon-maximize"></use></svg>
+                </button>
+            </div>
+            <div id="preview"></div>
+        </div>
+
+        <div class="mindmap-panel hidden" id="mindmapPanel">
+            <div class="panel-header"><span>MINDMAP</span></div>
+            <div id="mindmap"><div style="text-align:center;padding:50px;color:var(--text-secondary)">Loading...</div></div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span id="statusLeft">Ready</span>
+        <span id="statusRight">Lines: 0 | Chars: 0</span>
+    </div>
+
+    <input type="file" id="fileInput" accept=".md,.txt" multiple onchange="app.loadFiles(event)">
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ Settings</div>
+                <button class="icon-btn" onclick="app.closeModal()">
+                    <svg class="icon"><use href="#icon-close"></use></svg>
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label>App Name</label>
+                <input type="text" id="appNameInput" onchange="app.setAppName(this.value)">
+            </div>
+            
+            <div class="form-group">
+                <label>Toolbar Style</label>
+                <select id="toolbarStyleSelect" onchange="app.setToolbarStyle(this.value)">
+                    <option value="icon-only">Icon Only</option>
+                    <option value="icon-text">Icon & Text</option>
+                    <option value="text-only">Text Only</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Theme</label>
+                <div style="margin:10px 0">
+                    <div class="theme-preset active" data-theme="dark" style="background:linear-gradient(to right,#1e1e1e,#2d2d30)" onclick="app.setTheme('dark')"></div>
+                    <div class="theme-preset" data-theme="light" style="background:linear-gradient(to right,#fff,#f0f0f0)" onclick="app.setTheme('light')"></div>
+                    <div class="theme-preset" data-theme="dracula" style="background:linear-gradient(to right,#282a36,#44475a)" onclick="app.setTheme('dracula')"></div>
+                    <div class="theme-preset" data-theme="nord" style="background:linear-gradient(to right,#2e3440,#3b4252)" onclick="app.setTheme('nord')"></div>
+                    <div class="theme-preset" data-theme="monokai" style="background:linear-gradient(to right,#272822,#3e3d32)" onclick="app.setTheme('monokai')"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Font</label>
+                <select id="fontSelect" onchange="app.setFont(this.value)">
+                    <option value="'Consolas',monospace">Consolas</option>
+                    <option value="'Fira Code',monospace">Fira Code</option>
+                    <option value="'Source Code Pro',monospace">Source Code Pro</option>
+                    <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
+                    <option value="'Roboto Mono',monospace">Roboto Mono</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Font Size</label>
+                <select id="sizeSelect" onchange="app.setSize(this.value)">
+                    <option>11px</option>
+                    <option>12px</option>
+                    <option selected>13px</option>
+                    <option>14px</option>
+                    <option>15px</option>
+                    <option>16px</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="app.closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New File Modal -->
+    <div class="modal" id="newFileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">New File</div>
+                <button class="icon-btn" onclick="app.closeModal()">
+                    <svg class="icon"><use href="#icon-close"></use></svg>
+                </button>
+            </div>
+            <div class="form-group">
+                <label>Filename:</label>
+                <input type="text" id="newFileName" placeholder="filename.md">
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="app.closeModal()">Cancel</button>
+                <button class="btn" onclick="app.createFile()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates/Settings Modal -->
+    <div class="modal" id="templatesModal">
+        <div class="modal-content" style="min-width:600px">
+            <div class="modal-header">
+                <div class="modal-title">📋 Presentation Settings</div>
+                <button class="icon-btn" onclick="app.closeModal()">
+                    <svg class="icon"><use href="#icon-close"></use></svg>
+                </button>
+            </div>
+            <div class="form-group">
+                <label>Template:</label>
+                <select id="templateSelect">
+                    <option value="basic">Basic Presentation</option>
+                    <option value="principles">7 Guiding Principles</option>
+                    <option value="practices">7 Critical Practices</option>
+                    <option value="svc">Service Value Chain</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Reveal.js Theme:</label>
+                <select id="revealThemeSelect">
+                    <option value="black">Black (Default)</option>
+                    <option value="white">White</option>
+                    <option value="league">League</option>
+                    <option value="sky">Sky</option>
+                    <option value="beige">Beige</option>
+                    <option value="serif">Serif</option>
+                    <option value="simple">Simple</option>
+                    <option value="solarized">Solarized</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="app.closeModal()">Cancel</button>
+                <button class="btn" onclick="app.applyTemplateAndSettings()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">💡 Help & Info</div>
+                <button class="icon-btn" onclick="app.closeModal()">
+                    <svg class="icon"><use href="#icon-close"></use></svg>
+                </button>
+            </div>
+            
+            <h2>Benvenuto nell'Editor</h2>
+            <p>Questo è un editor Markdown ibrido progettato per la prototipazione rapida, la presa di appunti e la creazione di presentazioni. Combina un editor di testo, un'anteprima, un generatore di mindmap e un motore di presentazioni (Reveal.js) in un'unica interfaccia.</p>
+
+            <h2>Funzionalità Principali</h2>
+            <ul>
+                <li><p><b>Editor & Preview:</b> Scrivi in Markdown sull'editor e vedi l'anteprima HTML renderizzata in tempo reale nel pannello "Preview".</p></li>
+                <li><p><b>Mindmap:</b> Il pannello "Mindmap" converte automaticamente la struttura del tuo documento (usando le intestazioni <code>#</code>, <code>##</code>, ecc.) in una mappa mentale navigabile.</p></li>
+                <li><p><b>Presentazioni:</b> Usa il pulsante "Present" (icona Play) per trasformare il tuo Markdown in una presentazione navigabile. Separa le slide usando <code>---</code> nel tuo documento.</p></li>
+                <li><p><b>Diagrammi:</b> L'editor supporta i diagrammi Mermaid.js. Includi un blocco di codice <code>```mermaid ... ```</code> nel tuo testo e verrà renderizzato come diagramma nel pannello "Preview".</p></li>
+            </ul>
+
+            <h2>Sintassi di Base</h2>
+            <p>Usa la toolbar di formattazione sopra l'editor o scrivi direttamente:
+                <ul>
+                    <li><code># Titolo 1</code>, <code>## Titolo 2</code></li>
+                    <li><code>**grassetto**</code>, <code>*corsivo*</code>, <code>`codice`</code></li>
+                    <li><code>- Lista non ordinata</code>, <code>1. Lista ordinata</code></li>
+                    <li><code>[Testo link](http://...)</code>, <code>![Testo Alt](img_url)</code></li>
+                    <li><code>> Citazione</code></li>
+                </ul>
+            </p>
+            
+            <h2>Scorciatoie</h2>
+            <ul>
+                <li><p><kbd>Ctrl</kbd> + <kbd>S</kbd> (o <kbd>Cmd</kbd> + <kbd>S</kbd>): Salva il file corrente.</p></li>
+                <li><p><kbd>Ctrl</kbd> + <kbd>N</kbd> (o <kbd>Cmd</kbd> + <kbd>N</kbd>): Crea un nuovo file.</p></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div class="spinner"></div>
+        <span id="spinnerText">Loading...</span>
+    </div>
+
+    <!-- Core Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader"></script>
+    
+    <!-- Reveal.js -->
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/markdown/markdown.js"></script>
+    
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Marked Extensions -->
+    <script src="https://cdn.jsdelivr.net/npm/marked-gfm-heading-id/lib/index.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-highlight/lib/index.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- Diagram Library -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+
+    <script>
+const app = {
+    files: {}, 
+    currentFile: null, 
+    views: {editor:true, preview:false, mindmap:false},
+    mm: null, 
+    reveal: null, 
+    presentMode: false,
+    settings: {
+        theme:'dark', 
+        font:"'Consolas',monospace", 
+        size:'13px',
+        revealTheme: 'black',
+        appName: 'ITIL 4 Editor',
+        toolbarStyle: 'icon-only' // Aggiunto: icon-only, icon-text, text-only
+    },
+    
+    themes: {
+        dark: {'--bg-primary':'#1e1e1e','--bg-secondary':'#252526','--bg-tertiary':'#2d2d30','--text-primary':'#d4d4d4','--text-secondary':'#808080','--border':'#3e3e42','--accent':'#007acc'},
+        light: {'--bg-primary':'#fff','--bg-secondary':'#f0f0f0','--bg-tertiary':'#e0e0e0','--text-primary':'#000','--text-secondary':'#666','--border':'#ccc','--accent':'#0066cc'},
+        dracula: {'--bg-primary':'#282a36','--bg-secondary':'#1e1f29','--bg-tertiary':'#44475a','--text-primary':'#f8f8f2','--text-secondary':'#6272a4','--border':'#44475a','--accent':'#bd93f9'},
+        nord: {'--bg-primary':'#2e3440','--bg-secondary':'#3b4252','--bg-tertiary':'#434c5e','--text-primary':'#eceff4','--text-secondary':'#d8dee9','--border':'#4c566a','--accent':'#88c0d0'},
+        monokai: {'--bg-primary':'#272822','--bg-secondary':'#1e1f1c','--bg-tertiary':'#3e3d32','--text-primary':'#f8f8f2','--text-secondary':'#75715e','--border':'#3e3d32','--accent':'#66d9ef'}
+    },
+    
+    templates: {
+        basic: `---\ntheme: black\n---\n\n# ITIL 4\n\n---\n\n## Slide 2\n\nContent...`,
+        principles: `---\ntheme: black\n---\n\n# 7 Guiding Principles\n\n---\n\n## 1. Focus on Value\n\n---\n\n## 2. Start Where You Are`,
+        practices: `---\ntheme: black\n---\n\n# 7 Critical Practices\n\n---\n\n## Incident Management`,
+        svc: `---\ntheme: black\n---\n\n# Service Value Chain\n\n---\n\n## Plan → Improve → Engage`
+    },
+    
+    init() {
+        this.initMarked();
+        // Init Mermaid
+        mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+
+        this.loadStorage();
+        if (!Object.keys(this.files).length) {
+            this.files['welcome.md'] = {
+                name:'welcome.md', 
+                content:`# Welcome to the Editor
+## Features
+- **Markdown Toolbar**
+- **Presentation Themes**
+- **PDF Export** (Preview & Slides)
+- **Code Syntax Highlighting**
+- **Mindmap Generation**
+
+## Diagram Support (Mermaid.js)
+L'anteprima ora renderizza i diagrammi Mermaid!
+
+\`\`\`mermaid
+graph TD
+    A[Start] --> B(Process)
+    B --> C{Decision}
+    C -->|Yes| D[End]
+    C -->|No| B
+\`\`\`
+`, 
+                modified:Date.now()
+            };
+        }
+        this.currentFile = Object.keys(this.files)[0];
+        this.applySettings();
+        this.render();
+        document.getElementById('editor').addEventListener('input', () => {
+            this.updatePreview();
+            this.updateStatus();
+            this.save();
+        });
+        setTimeout(() => this.initMindmap(), 1000);
+
+        // Close dropdown if clicking outside
+        document.body.addEventListener('click', (e) => {
+            if (!e.target.closest('.export-btn-group')) {
+                document.getElementById('exportMenu').classList.remove('show');
+            }
+        });
+    },
+
+    initMarked() {
+        // Setup marked with extensions
+        marked.use(markedGfmHeadingId.gfmHeadingId());
+        marked.use(markedHighlight.markedHighlight({
+            langPrefix: 'language-',
+            highlight(code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            }
+        }));
+    },
+    
+    loadStorage() {
+        try {
+            const f = localStorage.getItem('itil_files');
+            if (f) this.files = JSON.parse(f);
+            const s = localStorage.getItem('itil_settings_v4'); // Key v4
+            if (s) {
+                 const loadedSettings = JSON.parse(s);
+                 this.settings = { ...this.settings, ...loadedSettings };
+            }
+        } catch(e) {
+            console.error("Failed to load from storage:", e);
+        }
+    },
+    
+    saveStorage() {
+        try {
+            localStorage.setItem('itil_files', JSON.stringify(this.files));
+            localStorage.setItem('itil_settings_v4', JSON.stringify(this.settings));
+        } catch(e) {
+            console.error("Failed to save to storage:", e);
+        }
+    },
+    
+    applySettings() {
+        this.setTheme(this.settings.theme, false);
+        this.setFont(this.settings.font, false);
+        this.setSize(this.settings.size, false);
+        this.setRevealTheme(this.settings.revealTheme, false);
+        this.setAppName(this.settings.appName, false);
+        this.setToolbarStyle(this.settings.toolbarStyle, false); // Aggiunto
+    },
+    
+    setTheme(name, save=true) {
+        const t = this.themes[name];
+        if (!t) return;
+        Object.keys(t).forEach(k => document.documentElement.style.setProperty(k,t[k]));
+        this.settings.theme = name;
+        
+        // Sincronizza tema Mermaid
+        const mermaidTheme = (name === 'light') ? 'default' : 'dark';
+        mermaid.initialize({ startOnLoad: false, theme: mermaidTheme });
+        
+        if (save) this.saveStorage();
+        document.querySelectorAll('.theme-preset').forEach(el => 
+            el.classList.toggle('active', el.dataset.theme === name));
+
+        // Forza re-render del preview per aggiornare i diagrammi
+        if (this.views.preview) {
+            this.updatePreview(); 
+        }
+    },
+    
+    setFont(f, save=true) {
+        document.documentElement.style.setProperty('--font-family', f);
+        this.settings.font = f;
+        if (save) this.saveStorage();
+        document.getElementById('fontSelect').value = f;
+    },
+    
+    setSize(s, save=true) {
+        document.getElementById('editor').style.fontSize = s;
+        document.getElementById('preview').style.fontSize = s;
+        this.settings.size = s;
+        if (save) this.saveStorage();
+        document.getElementById('sizeSelect').value = s;
+    },
+
+    setRevealTheme(theme, save=true) {
+        document.getElementById('revealTheme').href = `https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/theme/${theme}.css`;
+        this.settings.revealTheme = theme;
+        if (save) this.saveStorage();
+        document.getElementById('revealThemeSelect').value = theme;
+    },
+
+    setAppName(name, save=true) {
+        if (!name) name = "Markdown Editor"; // Fallback
+        document.querySelector('#appTitle span').textContent = name;
+        this.settings.appName = name;
+        if (save) {
+            this.saveStorage();
+            this.showStatus("App name updated!", "success");
+        }
+    },
+    
+    setToolbarStyle(style, save=true) {
+        document.body.dataset.toolbarStyle = style;
+        this.settings.toolbarStyle = style;
+        if (save) this.saveStorage();
+        document.getElementById('toolbarStyleSelect').value = style;
+    },
+    
+    render() {
+        const list = document.getElementById('fileList');
+        list.innerHTML = '';
+        
+        Object.values(this.files).forEach(f => {
+            const item = document.createElement('div');
+            item.className = 'file-item' + (f.name === this.currentFile ? ' active' : '');
+            item.innerHTML = `<span>${f.name}</span>
+                <button class="delete-btn" onclick="event.stopPropagation();app.deleteFile('${f.name}')" title="Delete file">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-trash"></use></svg>
+                </button>`;
+            item.onclick = () => this.switchFile(f.name);
+            list.appendChild(item);
+        });
+        
+        this.loadFile();
+    },
+    
+    loadFile() {
+        const f = this.files[this.currentFile];
+        if (!f) {
+            document.getElementById('editor').value = "";
+            this.updatePreview();
+            this.updateStatus();
+            return;
+        }
+        document.getElementById('editor').value = f.content;
+        this.updatePreview();
+        this.updateStatus();
+    },
+    
+    switchFile(name) {
+        if (this.presentMode) this.togglePresentation();
+        this.saveFile();
+        this.currentFile = name;
+        this.render();
+    },
+    
+    newFile() {
+        document.getElementById('newFileModal').classList.add('show');
+        document.getElementById('newFileName').value = '';
+        document.getElementById('newFileName').focus();
+    },
+    
+    createFile() {
+        let name = document.getElementById('newFileName').value.trim();
+        if (!name) {
+            this.showStatus("Filename cannot be empty", "error");
+            return;
+        }
+        if (!name.endsWith('.md')) name += '.md';
+        if (this.files[name]) {
+            this.showStatus("File already exists", "error");
+            return;
+        }
+        this.files[name] = {name, content:'# '+name.replace('.md',''), modified:Date.now()};
+        this.currentFile = name;
+        this.saveStorage();
+        this.render();
+        this.closeModal();
+    },
+    
+    deleteFile(name) {
+        if (!confirm('Delete '+name+'?')) return;
+        delete this.files[name];
+        if (this.currentFile === name) {
+            const keys = Object.keys(this.files);
+            this.currentFile = keys.length ? keys[0] : null;
+        }
+        this.saveStorage();
+        this.render();
+    },
+    
+    loadFiles(e) {
+        Array.from(e.target.files).forEach(file => {
+            const r = new FileReader();
+            r.onload = ev => {
+                this.files[file.name] = {name:file.name, content:ev.target.result, modified:Date.now()};
+                this.currentFile = file.name;
+                this.saveStorage();
+                this.render();
+            };
+            r.readAsText(file);
+        });
+    },
+    
+    saveFile() {
+        if (!this.currentFile) return;
+        this.files[this.currentFile].content = document.getElementById('editor').value;
+        this.files[this.currentFile].modified = Date.now();
+        this.showStatus("File saved!", "success");
+    },
+    
+    save() {
+        this.saveFile();
+        this.saveStorage();
+    },
+
+    toggleExportMenu() {
+        document.getElementById('exportMenu').classList.toggle('show');
+    },
+
+    exportAs(fmt) {
+        this.toggleExportMenu(); // Close menu
+        const content = document.getElementById('editor').value;
+        const name = this.currentFile ? this.currentFile.replace('.md','') : 'document';
+        
+        switch(fmt) {
+            case 'md':
+                this.download(content, name+'.md', 'text/markdown');
+                break;
+            case 'html':
+                const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${name}</title><style>body{font-family:${this.settings.font};max-width:800px;margin:40px auto;padding:20px;background:${this.themes[this.settings.theme]['--bg-primary']};color:${this.themes[this.settings.theme]['--text-primary']};line-height:1.6}</style></head><body>${marked.parse(content)}</body></html>`;
+                this.download(html, name+'.html', 'text/html');
+                break;
+            case 'pdf-preview':
+                this.exportPreviewToPDF();
+                break;
+            case 'pdf-slides':
+                this.exportSlidesToPDF();
+                break;
+        }
+    },
+    
+    download(content, filename, type) {
+        const blob = new Blob([content], {type});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+
+    async exportPreviewToPDF() {
+        this.showSpinner("Generating PDF (Preview)...");
+        try {
+            const { jsPDF } = window.jspdf;
+            const previewEl = document.getElementById('preview');
+            const canvas = await html2canvas(previewEl, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            
+            const pdf = new jsPDF('p', 'px', [canvas.width, canvas.height]);
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+            pdf.save(this.currentFile.replace('.md', '') + '_preview.pdf');
+        } catch (e) {
+            console.error("PDF Preview Export Error:", e);
+            this.showStatus("Error exporting PDF", "error");
+        }
+        this.hideSpinner();
+    },
+
+    async exportSlidesToPDF() {
+        this.showSpinner("Generating PDF (Slides)... This may take a moment.");
+        
+        try {
+            const { jsPDF } = window.jspdf;
+            const wasPresenting = this.presentMode;
+            if (!wasPresenting) {
+                await this.initReveal(true);
+            }
+
+            const totalSlides = this.reveal.getTotalSlides();
+            if (totalSlides === 0) {
+                this.showStatus("No slides found to export", "error");
+                this.hideSpinner();
+                if (!wasPresenting) this.destroyReveal();
+                return;
+            }
+
+            const config = this.reveal.getConfig();
+            const pdf = new jsPDF('l', 'px', [config.width, config.height]);
+            const slidesContainer = document.querySelector('.reveal .slides');
+
+            for (let i = 0; i < totalSlides; i++) {
+                this.showSpinner(`Generating PDF... (Slide ${i + 1} of ${totalSlides})`);
+                await this.reveal.slide(i, 0, 0);
+                await new Promise(r => setTimeout(r, 500)); 
+
+                const canvas = await html2canvas(slidesContainer, { 
+                    width: config.width, height: config.height, x: 0, y: 0
+                });
+
+                if (i > 0) pdf.addPage([config.width, config.height], 'l');
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, config.width, config.height);
+            }
+
+            pdf.save(this.currentFile.replace('.md', '') + '_slides.pdf');
+            if (!wasPresenting) this.destroyReveal();
+
+        } catch(e) {
+            console.error("PDF Slides Export Error:", e);
+            this.showStatus("Error exporting slides PDF", "error");
+        }
+        this.hideSpinner();
+    },
+    
+    updatePreview() {
+        if (this.presentMode) return;
+        const previewEl = document.getElementById('preview');
+        previewEl.innerHTML = marked.parse(document.getElementById('editor').value);
+        try {
+            // Cerca nodi con class="language-mermaid" e li renderizza
+            mermaid.run({ nodes: previewEl.querySelectorAll('.language-mermaid') });
+        } catch(e) {
+            console.error("Mermaid render error:", e);
+        }
+    },
+    
+    updateStatus() {
+        const c = document.getElementById('editor').value;
+        document.getElementById('statusRight').textContent = `Lines: ${c.split('\n').length} | Chars: ${c.length}`;
+    },
+    
+    toggleView(v) {
+        this.views[v] = !this.views[v];
+        document.getElementById('editorPanel').classList.toggle('hidden', !this.views.editor);
+        document.getElementById('previewPanel').classList.toggle('hidden', !this.views.preview);
+        document.getElementById('mindmapPanel').classList.toggle('hidden', !this.views.mindmap);
+        
+        document.getElementById('btnEditor').classList.toggle('active', this.views.editor);
+        document.getElementById('btnPreview').classList.toggle('active', this.views.preview);
+        document.getElementById('btnMindmap').classList.toggle('active', this.views.mindmap);
+        
+        if (this.views.mindmap) setTimeout(() => this.refreshMindmap(), 100);
+        if (this.views.preview) this.updatePreview(); // Re-render mermaid
+    },
+    
+    toggleFileManager() {
+        document.getElementById('fileManager').classList.toggle('hidden');
+    },
+    
+    showSettings() {
+        // Populate settings modal with current values
+        document.getElementById('appNameInput').value = this.settings.appName;
+        document.getElementById('toolbarStyleSelect').value = this.settings.toolbarStyle;
+        document.getElementById('fontSelect').value = this.settings.font;
+        document.getElementById('sizeSelect').value = this.settings.size;
+        document.querySelectorAll('.theme-preset').forEach(el => 
+            el.classList.toggle('active', el.dataset.theme === this.settings.theme));
+        
+        document.getElementById('settingsModal').classList.add('show');
+    },
+
+    showHelp() {
+        document.getElementById('helpModal').classList.add('show');
+    },
+    
+    showPresentationSettings() {
+        document.getElementById('templateSelect').value = 'basic'; // Default to basic
+        document.getElementById('revealThemeSelect').value = this.settings.revealTheme;
+        document.getElementById('templatesModal').classList.add('show');
+    },
+    
+    applyTemplateAndSettings() {
+        const t = document.getElementById('templateSelect').value;
+        const newContent = this.templates[t];
+        if (newContent) {
+            document.getElementById('editor').value = newContent;
+        }
+
+        const theme = document.getElementById('revealThemeSelect').value;
+        this.setRevealTheme(theme, true); // Save and apply
+        
+        this.updatePreview();
+        this.save();
+        this.closeModal();
+    },
+    
+    closeModal() {
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
+    },
+
+    async initReveal(silent = false) { 
+        const c = document.getElementById('editor').value;
+        if (!silent) {
+            if (!c.includes('---')) {
+                alert('Use --- to separate slides');
+                return false;
+            }
+        }
+        
+        let md = c;
+        if (c.startsWith('---')) {
+            const parts = c.split('---');
+            if(parts.length >= 3) {
+                md = parts.slice(2).join('---').trim();
+            }
+        }
+        
+        document.getElementById('preview').innerHTML = `<div class="reveal"><div class="slides"><section data-markdown data-separator="^---$" data-separator-vertical="^--$"><textarea data-template>${md}</textarea></section></div></div>`;
+        
+        const config = {
+            embedded: true, hash: false, plugins:[RevealMarkdown]
+        };
+        if (silent) {
+            config.controls = false;
+        }
+
+        this.reveal = new Reveal(document.querySelector('.reveal'), config);
+        await this.reveal.initialize();
+        return true;
+    },
+
+    destroyReveal() {
+        if (this.reveal) {
+            this.reveal.destroy();
+            this.reveal = null;
+        }
+        this.updatePreview();
+    },
+    
+    async togglePresentation() { 
+        this.presentMode = !this.presentMode;
+        document.getElementById('btnPresentation').classList.toggle('active', this.presentMode);
+        document.getElementById('previewTitle').textContent = this.presentMode ? 'PRESENTATION' : 'PREVIEW';
+        
+        if (this.presentMode) {
+            if (!await this.initReveal()) {
+                this.presentMode = false;
+                document.getElementById('btnPresentation').classList.remove('active');
+            }
+        } else {
+            this.destroyReveal();
+        }
+    },
+    
+    toggleFullscreen() {
+        const p = document.getElementById('previewPanel');
+        p.classList.toggle('fullscreen');
+        if (p.classList.contains('fullscreen') && this.reveal) {
+            this.reveal.layout();
+        }
+    },
+
+    insertMarkdown(prefix, suffix, placeholder) {
+        const editor = document.getElementById('editor');
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const text = editor.value;
+        const selection = text.substring(start, end);
+        
+        let newText = selection ? (prefix + selection + suffix) : (prefix + placeholder + suffix);
+        editor.value = text.substring(0, start) + newText + text.substring(end);
+        
+        if (selection) {
+            editor.setSelectionRange(start + newText.length, start + newText.length);
+        } else {
+            editor.setSelectionRange(start + prefix.length, start + prefix.length + placeholder.length);
+        }
+        editor.focus();
+        this.updatePreview();
+        this.save();
+    },
+    
+    async initMindmap() {
+        try {
+            await new Promise((resolve, reject) => {
+                const start = Date.now();
+                const check = setInterval(() => {
+                    if (window.markmap && window.markmap.Markmap) {
+                        clearInterval(check); resolve();
+                    }
+                    if (Date.now() - start > 10000) {
+                        clearInterval(check); reject(new Error("Markmap autoloader timeout"));
+                    }
+                }, 100);
+            });
+            this.refreshMindmap();
+        } catch(e) {
+            console.error("Failed to init Markmap:", e);
+            document.getElementById('mindmap').innerHTML = `<div style="text-align:center;padding:50px;color:var(--text-secondary)">Failed to load Mindmap.</div>`;
+        }
+    },
+    
+    refreshMindmap() {
+        if (!window.markmap || !this.views.mindmap) return;
+        try {
+            if (this.mm) this.mm.destroy();
+            const t = new window.markmap.Transformer();
+            const {root} = t.transform(document.getElementById('editor').value);
+            const c = document.getElementById('mindmap');
+            c.innerHTML = '';
+            const svg = d3.select('#mindmap').append('svg').attr('width','100%').attr('height','100%');
+            this.mm = window.markmap.Markmap.create(svg.node(), null, root);
+            this.mm.fit();
+        } catch(e) {
+            console.error("Mindmap refresh error:", e);
+        }
+    },
+
+    showStatus(message, type = "success") {
+        const statusEl = document.getElementById('statusLeft');
+        const oldText = statusEl.textContent;
+        const oldColor = statusEl.style.color;
+
+        statusEl.style.color = (type === "error") ? "#f44336" : "#4caf50";
+        statusEl.textContent = message;
+
+        setTimeout(() => {
+            statusEl.textContent = oldText;
+            statusEl.style.color = oldColor;
+        }, 3000);
+    },
+
+    showSpinner(text = "Loading...") {
+        document.getElementById('spinnerText').textContent = text;
+        document.getElementById('spinnerOverlay').style.display = 'flex';
+    },
+
+    hideSpinner() {
+        document.getElementById('spinnerOverlay').style.display = 'none';
+    }
+};
+
+window.addEventListener('DOMContentLoaded', () => app.init());
+document.addEventListener('keydown', e => {
+    if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); app.save(); }
+    if ((e.ctrlKey||e.metaKey) && e.key==='n') { e.preventDefault(); app.newFile(); }
+});
+    </script>
+
+    <!-- SVG Icon Sprite Sheet (Minimal Monochrome) -->
+    <svg width="0" height="0" style="position:absolute; display:none;">
+        <defs>
+            <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></symbol>
+            <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></symbol>
+            <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+            <symbol id="icon-git-branch" viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></symbol>
+            <symbol id="icon-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></symbol>
+            <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></symbol>
+            <symbol id="icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></symbol>
+            <symbol id="icon-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></symbol>
+            <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></symbol>
+            <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></symbol>
+            <symbol id="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></symbol>
+            <symbol id="icon-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></symbol>
+            <symbol id="icon-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></symbol>
+            <symbol id="icon-bold" viewBox="0 0 24 24"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path></symbol>
+            <symbol id="icon-italic" viewBox="0 0 24 24"><line x1="19" y1="4" x2="10" y2="4"></line><line x1="14" y1="20" x2="5" y2="20"></line><line x1="15" y1="4" x2="9" y2="20"></line></symbol>
+            <symbol id="icon-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></symbol>
+            <symbol id="icon-quote" viewBox="0 0 24 24"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v8c0 1.25.75 2 2 2h2"></path><path d="M14 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v8c0 1.25.75 2 2 2h2"></path></symbol>
+            <symbol id="icon-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></symbol>
+            <symbol id="icon-ol" viewBox="0 0 24 24"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4"></path><path d="M4 10h2"></path><path d="M6 18H4v-4h2v-1h-2"></path></symbol>
+            <symbol id="icon-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></symbol>
+            <symbol id="icon-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+            <symbol id="icon-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></symbol>
+            <symbol id="icon-code-block" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></symbol>
+            <symbol id="icon-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></symbol>
+            <symbol id="icon-file" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></symbol>
+        </defs>
+    </svg>
+
+</body>
+</html>
