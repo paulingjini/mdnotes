@@ -1,365 +1,731 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MD Notes - Editor</title>
-    
-    <!-- Reveal.js CSS -->
+    <title>MDNotes Pro - Professional Markdown Editor</title>
+
+    <!-- External CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.css">
-    <!-- Il tema di default, verrà cambiato dinamicamente -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/theme/black.css" id="revealTheme">
-    
-    <!-- Highlight.js CSS per l'anteprima -->
-    <link reliat="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-    
-    <style id="dynamicStyles">
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        :root {
-            --bg-primary: #1e1e1e;
-            --bg-secondary: #252526;
-            --bg-tertiary: #2d2d30;
-            --text-primary: #d4d4d4;
-            --text-secondary: #808080;
-            --border: #3e3e42;
-            --accent: #007acc;
-            --font-family: 'Consolas', monospace;
-        }
-        
-        body {
-            font-family: var(--font-family);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            overflow: hidden;
-            height: 100vh;
-        }
-        
-        .header {
-            background: var(--bg-secondary);
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .header h1 { 
-            font-size: 16px; 
-            font-weight: 600; 
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 
-        .header .btn-group { display: flex; gap: 5px; }
-        
-        .toolbar {
-            background: var(--bg-tertiary);
-            padding: 8px 15px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        
-        .btn, .toolbar-btn, .icon-btn {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            padding: 6px 12px;
-            font-size: 12px;
-            cursor: pointer;
-            font-family: inherit;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        
-        .btn:hover, .toolbar-btn:hover, .icon-btn:hover { 
-            background: var(--accent); 
-            border-color: var(--accent); 
-            color: white;
-        }
-        .btn.active, .toolbar-btn.active { 
-            background: var(--accent); 
-            color: white;
-        }
+    <style id="appStyles">
+        /* CSS Variables for Theming */
+:root {
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #252526;
+    --bg-tertiary: #2d2d30;
+    --text-primary: #d4d4d4;
+    --text-secondary: #808080;
+    --border: #3e3e42;
+    --accent: #007acc;
+    --font-family: 'Consolas', monospace;
+    --font-size: 13px;
+}
 
-        .icon-btn {
-            padding: 6px;
-            min-width: 30px;
-        }
-        
-        .toolbar-btn {
-            padding: 5px 8px;
-        }
+/* Theme: Light */
+[data-theme="light"] {
+    --bg-primary: #fff;
+    --bg-secondary: #f0f0f0;
+    --bg-tertiary: #e0e0e0;
+    --text-primary: #000;
+    --text-secondary: #666;
+    --border: #ccc;
+    --accent: #0066cc;
+}
 
-        .icon {
-            width: 16px;
-            height: 16px;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
-        }
+/* Theme: Dracula */
+[data-theme="dracula"] {
+    --bg-primary: #282a36;
+    --bg-secondary: #1e1f29;
+    --bg-tertiary: #44475a;
+    --text-primary: #f8f8f2;
+    --text-secondary: #6272a4;
+    --border: #44475a;
+    --accent: #bd93f9;
+}
 
-        /* Stili per la personalizzazione della toolbar */
-        body[data-toolbar-style="icon-only"] .toolbar-btn span { display: none; }
-        body[data-toolbar-style="text-only"] .toolbar-btn .icon { display: none; }
-        body[data-toolbar-style="icon-text"] .toolbar-btn { padding: 5px 10px; }
+/* Theme: Nord */
+[data-theme="nord"] {
+    --bg-primary: #2e3440;
+    --bg-secondary: #3b4252;
+    --bg-tertiary: #434c5e;
+    --text-primary: #eceff4;
+    --text-secondary: #d8dee9;
+    --border: #4c566a;
+    --accent: #88c0d0;
+}
 
-        
-        .separator { width: 1px; height: 20px; background: var(--border); margin: 0 5px; }
-        
-        select, .btn-group { display: flex; gap: 5px; align-items: center; }
-        
-        select {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            padding: 6px;
-            font-size: 12px;
-            font-family: inherit;
-            border-radius: 4px;
-        }
+/* Theme: Monokai */
+[data-theme="monokai"] {
+    --bg-primary: #272822;
+    --bg-secondary: #1e1f1c;
+    --bg-tertiary: #3e3d32;
+    --text-primary: #f8f8f2;
+    --text-secondary: #75715e;
+    --border: #3e3d32;
+    --accent: #66d9ef;
+}
 
-        .export-btn-group {
-            position: relative;
-        }
 
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            min-width: 180px;
-            z-index: 100;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            margin-top: 5px;
-        }
+/* Base Styles and Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        .dropdown-menu.show { display: block; }
-        .dropdown-item {
-            padding: 8px 15px;
-            font-size: 12px;
-            color: var(--text-primary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .dropdown-item:hover { background-color: var(--accent); }
-        
-        .main-container { 
-            display: flex; 
-            height: calc(100vh - 90px); 
-        }
-        
-        .file-manager {
-            width: 200px;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .file-manager.hidden { display: none; }
-        .file-manager-header {
-            padding: 8px 10px;
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border);
-            font-size: 11px;
-            font-weight: bold;
-        }
-        
-        .file-list { flex: 1; overflow-y: auto; }
-        
-        .file-item {
-            padding: 8px 10px;
-            cursor: pointer;
-            font-size: 12px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .file-item:hover { background: var(--bg-tertiary); }
-        .file-item.active { background: var(--accent); color: white; }
-        .file-item .delete-btn { opacity: 0; background: none; border: none; cursor: pointer; }
-        .file-item:hover .delete-btn { opacity: 1; }
-        .file-item .delete-btn .icon:hover { color: #f44336; }
-        
-        .editor-panel, .preview-panel, .mindmap-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border);
-            min-width: 0;
-        }
-        
-        .editor-panel.hidden, .preview-panel.hidden, .mindmap-panel.hidden { display: none; }
-        
-        .preview-panel.fullscreen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; border: none;
-        }
-        
-        .panel-header {
-            background: var(--bg-tertiary);
-            padding: 5px 10px;
-            font-size: 11px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-         .panel-header .icon-btn { padding: 2px; }
+body {
+    font-family: var(--font-family);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+}
 
-        #mdToolbar {
-            background: var(--bg-secondary);
-            padding: 5px 10px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
 
-        #mdToolbar .btn {
-            font-size: 14px;
-            font-weight: bold;
-            padding: 4px 8px;
-            min-width: 28px;
-            text-align: center;
-        }
-        
-        #editor {
-            flex: 1;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            border: none;
-            padding: 15px;
-            font-family: inherit;
-            font-size: 13px;
-            line-height: 1.6;
-            resize: none;
-            outline: none;
-        }
-        
-        #preview {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background: var(--bg-primary);
-            font-size: 13px; /* Default size */
-        }
-        
-        /* Stili Markdown potenziati */
-        #preview h1 { font-size: 2em; margin: 0.67em 0; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: .3em; }
-        #preview h2 { font-size: 1.5em; margin: 0.83em 0; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: .3em; }
-        #preview h3 { font-size: 1.17em; margin: 1em 0; }
-        #preview p { margin: 1em 0; line-height: 1.7; }
-        #preview code:not(pre code) { background: var(--bg-tertiary); padding: .2em .4em; font-size: 85%; border-radius: 6px; }
-        #preview pre { background: var(--bg-tertiary); padding: 16px; overflow-x: auto; border-radius: 6px; }
-        #preview pre code { padding: 0; background: none; }
-        #preview blockquote { border-left: .25em solid var(--border); padding: 0 1em; color: var(--text-secondary); margin: 0; }
-        #preview ul, #preview ol { padding-left: 2em; margin: 1em 0; }
-        #preview table { border-collapse: collapse; margin: 1em 0; }
-        #preview th, #preview td { border: 1px solid var(--border); padding: 6px 13px; }
-        #preview th { font-weight: bold; background-color: var(--bg-tertiary); }
-        #preview tr:nth-child(2n) { background-color: var(--bg-secondary); }
-        
-        #mindmap { flex: 1; background: var(--bg-primary); }
-        #mindmap svg { width: 100%; height: 100%; }
-        
-        .status-bar {
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            padding: 4px 20px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;
-        }
-        .modal.show { display: flex; }
-        .modal-content {
-            background: var(--bg-secondary); border: 1px solid var(--border);
-            padding: 20px; min-width: 400px; max-width: 90%; max-height: 80vh;
-            overflow-y: auto; border-radius: 8px;
-        }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .modal-title { font-size: 16px; color: var(--accent); }
-        .modal-header .icon-btn { background: none; border: none; }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-group label {
-            display: block; margin-bottom: 5px; font-size: 12px; color: var(--text-secondary);
-        }
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%; padding: 8px; background: var(--bg-primary);
-            border: 1px solid var(--border); color: var(--text-primary);
-            font-family: inherit; font-size: 13px; border-radius: 4px;
-        }
-        .form-group textarea { min-height: 200px; resize: vertical; }
-        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-        
-        .theme-preset {
-            display: inline-block; width: 60px; height: 40px; border: 2px solid var(--border);
-            cursor: pointer; margin-right: 10px; border-radius: 4px;
-        }
-        .theme-preset:hover { border-color: var(--accent); }
-        .theme-preset.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
-        
-        /* Stili Help Modal */
-        #helpModal .modal-content { min-width: 60vw; }
-        #helpModal h2 { font-size: 1.2em; color: var(--accent); margin-top: 15px; margin-bottom: 10px; }
-        #helpModal p { font-size: 13px; line-height: 1.6; margin-bottom: 10px; }
-        #helpModal code { background: var(--bg-tertiary); padding: 2px 5px; border-radius: 4px; font-family: inherit; }
-        #helpModal kbd {
-            background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px;
-            padding: 3px 6px; font-size: 0.9em;
-        }
-        
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: var(--bg-primary); }
-        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 5px; }
-        
-        #fileInput { display: none; }
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
 
-        /* Loading Spinner */
-        .spinner-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;
-            flex-direction: column; gap: 10px; color: var(--text-primary);
-        }
-        .spinner {
-            border: 4px solid var(--bg-tertiary); border-top: 4px solid var(--accent);
-            border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 5px;
+}
+
+/* Loading Spinner */
+.spinner-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--text-primary);
+}
+
+.spinner {
+    border: 4px solid var(--bg-tertiary);
+    border-top: 4px solid var(--accent);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Hidden Utility */
+.hidden {
+    display: none !important;
+}
+
+/* Fullscreen States */
+.fullscreen-mode {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 9999 !important;
+    border: none !important;
+}
+
+.fullscreen-mode .panel-header {
+    display: flex !important;
+}
+
+
+/* Component Styles */
+
+/* Header */
+.header {
+    background: var(--bg-secondary);
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header .btn-group {
+    display: flex;
+    gap: 5px;
+}
+
+/* Toolbar */
+.toolbar {
+    background: var(--bg-tertiary);
+    padding: 8px 15px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.separator {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 5px;
+}
+
+/* Buttons */
+.btn, .toolbar-btn, .icon-btn {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn:hover, .toolbar-btn:hover, .icon-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+.btn.active, .toolbar-btn.active {
+    background: var(--accent);
+    color: white;
+}
+
+.icon-btn {
+    padding: 6px;
+    min-width: 30px;
+}
+
+.toolbar-btn {
+    padding: 5px 8px;
+}
+
+/* Icons */
+.icon {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+/* Toolbar Style Variants */
+body[data-toolbar-style="icon-only"] .toolbar-btn span {
+    display: none;
+}
+
+body[data-toolbar-style="text-only"] .toolbar-btn .icon {
+    display: none;
+}
+
+body[data-toolbar-style="icon-text"] .toolbar-btn {
+    padding: 5px 10px;
+}
+
+/* Dropdown Menu */
+.export-btn-group {
+    position: relative;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-width: 180px;
+    z-index: 100;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    margin-top: 5px;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    padding: 8px 15px;
+    font-size: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-item:hover {
+    background-color: var(--accent);
+}
+
+/* Main Container */
+.main-container {
+    display: flex;
+    height: calc(100vh - 90px);
+}
+
+/* File Manager */
+.file-manager {
+    width: 200px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+.file-manager.hidden {
+    display: none;
+}
+
+.file-manager-header {
+    padding: 8px 10px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.file-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.file-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.file-item.active {
+    background: var(--accent);
+    color: white;
+}
+
+.file-item .delete-btn {
+    opacity: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.file-item:hover .delete-btn {
+    opacity: 1;
+}
+
+.file-item .delete-btn .icon:hover {
+    color: #f44336;
+}
+
+/* Panels */
+.editor-panel, .preview-panel, .mindmap-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    min-width: 0;
+}
+
+.editor-panel.hidden, .preview-panel.hidden, .mindmap-panel.hidden {
+    display: none;
+}
+
+.panel-header {
+    background: var(--bg-tertiary);
+    padding: 5px 10px;
+    font-size: 11px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header .icon-btn {
+    padding: 2px;
+}
+
+/* Editor */
+#mdToolbar {
+    background: var(--bg-secondary);
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+#mdToolbar .btn {
+    font-size: 14px;
+    font-weight: bold;
+    padding: 4px 8px;
+    min-width: 28px;
+    text-align: center;
+}
+
+/* CodeMirror Override Styles */
+.CodeMirror {
+    height: 100% !important;
+    font-family: var(--font-family) !important;
+    font-size: var(--font-size) !important;
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.CodeMirror-gutters {
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border) !important;
+}
+
+.CodeMirror-linenumber {
+    color: var(--text-secondary) !important;
+}
+
+.CodeMirror-cursor {
+    border-left: 2px solid var(--accent) !important;
+}
+
+.CodeMirror-selected {
+    background: rgba(0, 122, 204, 0.2) !important;
+}
+
+/* Fallback Editor (Textarea) */
+#editor {
+    flex: 1;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: none;
+    padding: 15px;
+    font-family: inherit;
+    font-size: var(--font-size);
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+}
+
+/* Preview */
+#preview {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: var(--bg-primary);
+    font-size: var(--font-size);
+}
+
+/* Preview Markdown Styles */
+#preview h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: .3em;
+}
+
+#preview h2 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: .3em;
+}
+
+#preview h3 {
+    font-size: 1.17em;
+    margin: 1em 0;
+}
+
+#preview p {
+    margin: 1em 0;
+    line-height: 1.7;
+}
+
+#preview code:not(pre code) {
+    background: var(--bg-tertiary);
+    padding: .2em .4em;
+    font-size: 85%;
+    border-radius: 6px;
+}
+
+#preview pre {
+    background: var(--bg-tertiary);
+    padding: 16px;
+    overflow-x: auto;
+    border-radius: 6px;
+}
+
+#preview pre code {
+    padding: 0;
+    background: none;
+}
+
+#preview blockquote {
+    border-left: .25em solid var(--border);
+    padding: 0 1em;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+#preview ul, #preview ol {
+    padding-left: 2em;
+    margin: 1em 0;
+}
+
+#preview table {
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+#preview th, #preview td {
+    border: 1px solid var(--border);
+    padding: 6px 13px;
+}
+
+#preview th {
+    font-weight: bold;
+    background-color: var(--bg-tertiary);
+}
+
+#preview tr:nth-child(2n) {
+    background-color: var(--bg-secondary);
+}
+
+/* Mindmap */
+#mindmap {
+    flex: 1;
+    background: var(--bg-primary);
+}
+
+#mindmap svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Status Bar */
+.status-bar {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 4px 20px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Form Elements */
+select, .btn-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+select {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 6px;
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 4px;
+}
+
+#fileInput {
+    display: none;
+}
+
+
+/* Modal Dialogs */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    padding: 20px;
+    min-width: 400px;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 8px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.modal-title {
+    font-size: 16px;
+    color: var(--accent);
+}
+
+.modal-header .icon-btn {
+    background: none;
+    border: none;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    border-radius: 4px;
+}
+
+.form-group textarea {
+    min-height: 200px;
+    resize: vertical;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+/* Theme Presets */
+.theme-preset {
+    display: inline-block;
+    width: 60px;
+    height: 40px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    margin-right: 10px;
+    border-radius: 4px;
+}
+
+.theme-preset:hover {
+    border-color: var(--accent);
+}
+
+.theme-preset.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* Help Modal */
+#helpModal .modal-content {
+    min-width: 60vw;
+}
+
+#helpModal h2 {
+    font-size: 1.2em;
+    color: var(--accent);
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+#helpModal p {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+#helpModal code {
+    background: var(--bg-tertiary);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+#helpModal kbd {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 0.9em;
+}
+
+
+
     </style>
 </head>
-<body data-toolbar-style="icon-only"> <!-- Default: icon-only -->
-    
+<body data-toolbar-style="icon-only">
+
+    <!-- Header -->
     <div class="header">
         <h1 id="appTitle">
             <svg class="icon" style="width:20px; height:20px" viewBox="0 0 24 24"><use href="#icon-edit"></use></svg>
-            <span>ITIL 4 Editor</span>
+            <span>MDNotes Pro</span>
         </h1>
         <div class="btn-group">
-            <button class="btn" onclick="app.newFile()">+ New</button>
+            <button class="btn" onclick="app.showNewFileModal()">+ New</button>
             <button class="btn" onclick="document.getElementById('fileInput').click()">📁 Open</button>
             <button class="icon-btn" onclick="app.showSettings()" title="Settings">
                 <svg class="icon"><use href="#icon-settings"></use></svg>
@@ -370,6 +736,7 @@
         </div>
     </div>
 
+    <!-- Toolbar -->
     <div class="toolbar">
         <button class="toolbar-btn" onclick="app.toggleFileManager()" title="Toggle File Manager">
             <svg class="icon"><use href="#icon-folder"></use></svg>
@@ -391,7 +758,7 @@
             </button>
         </div>
         <div class="separator"></div>
-        <button class="toolbar-btn" onclick="app.saveFile()" title="Save">
+        <button class="toolbar-btn" onclick="app.save()" title="Save (Ctrl+S)">
             <svg class="icon"><use href="#icon-save"></use></svg>
             <span>Save</span>
         </button>
@@ -417,6 +784,10 @@
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-image"></use></svg>
                     <span>as PDF (Slides)</span>
                 </div>
+                <div class="dropdown-item" onclick="app.exportAs('pptx')">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-presentation"></use></svg>
+                    <span>as PowerPoint (.pptx)</span>
+                </div>
             </div>
         </div>
         <div class="separator"></div>
@@ -426,234 +797,277 @@
         </button>
         <button class="toolbar-btn" onclick="app.showPresentationSettings()" title="Presentation Settings">
             <svg class="icon"><use href="#icon-sliders"></use></svg>
-            <span>Slides</span>
+            <span>Templates</span>
         </button>
     </div>
 
+    <!-- Main Container -->
     <div class="main-container">
+        <!-- File Manager -->
         <div class="file-manager" id="fileManager">
             <div class="file-manager-header">FILES</div>
             <div class="file-list" id="fileList"></div>
         </div>
 
+        <!-- Editor Panel -->
         <div class="editor-panel" id="editorPanel">
-            <div class="panel-header"><span>EDITOR</span></div>
+            <div class="panel-header">
+                <span>EDITOR</span>
+                <button class="icon-btn" onclick="app.toggleEditorFullscreen()" title="Fullscreen">
+                    <svg class="icon"><use href="#icon-maximize"></use></svg>
+                </button>
+            </div>
             <div id="mdToolbar">
-                <button class="btn" onclick="app.insertMarkdown('**', '**', 'bold')" title="Bold">
+                <button class="btn" onclick="app.insertMarkdown('**', '**', 'bold')" title="Bold (Ctrl+B)">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-bold"></use></svg>
                 </button>
-                <button class="btn" onclick="app.insertMarkdown('*', '*', 'italic')" title="Italic">
+                <button class="btn" onclick="app.insertMarkdown('*', '*', 'italic')" title="Italic (Ctrl+I)">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-italic"></use></svg>
                 </button>
-                <button class="btn" onclick="app.insertMarkdown('`', '`', 'code')" title="Code">
+                <button class="btn" onclick="app.insertMarkdown('`', '`', 'code')" title="Inline Code">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-code"></use></svg>
                 </button>
                 <button class="btn" onclick="app.insertMarkdown('\n> ', '', 'Quote')" title="Blockquote">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-quote"></use></svg>
                 </button>
-                <button class="btn" onclick="app.insertMarkdown('\n- ', '', 'List')" title="List">
+                <button class="btn" onclick="app.insertMarkdown('\n- ', '', 'List item')" title="Unordered List">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-list"></use></svg>
                 </button>
-                <button class="btn" onclick="app.insertMarkdown('\n1. ', '', 'Ordered List')" title="Ordered List">
+                <button class="btn" onclick="app.insertMarkdown('\n1. ', '', 'List item')" title="Ordered List">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-ol"></use></svg>
                 </button>
                 <button class="btn" onclick="app.insertMarkdown('\n- [ ] ', '', 'Task')" title="Task List">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-check-square"></use></svg>
                 </button>
-                <button class="btn" onclick="app.insertMarkdown('[', '](url)', 'link')" title="Link">
+                <button class="btn" onclick="app.insertMarkdown('[', '](url)', 'link text')" title="Link (Ctrl+K)">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-link"></use></svg>
                 </button>
-                <button class="btn" onclick="app.insertMarkdown('![', '](url)', 'alt')" title="Image">
+                <button class="btn" onclick="app.insertMarkdown('![', '](url)', 'alt text')" title="Image">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-image"></use></svg>
                 </button>
-                <button class="btn" onclick="app.insertMarkdown('\n```\n', '\n```\n', 'code block')" title="Code Block">
+                <button class="btn" onclick="app.insertMarkdown('\n```\n', '\n```\n', 'code')" title="Code Block">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-code-block"></use></svg>
                 </button>
             </div>
             <textarea id="editor" spellcheck="false"></textarea>
         </div>
 
+        <!-- Preview Panel -->
         <div class="preview-panel hidden" id="previewPanel">
             <div class="panel-header">
                 <span id="previewTitle">PREVIEW</span>
-                <button class="icon-btn" onclick="app.toggleFullscreen()" title="Fullscreen">
+                <button class="icon-btn" onclick="app.togglePreviewFullscreen()" title="Fullscreen">
                     <svg class="icon"><use href="#icon-maximize"></use></svg>
                 </button>
             </div>
             <div id="preview"></div>
         </div>
 
+        <!-- Mindmap Panel -->
         <div class="mindmap-panel hidden" id="mindmapPanel">
-            <div class="panel-header"><span>MINDMAP</span></div>
-            <div id="mindmap"><div style="text-align:center;padding:50px;color:var(--text-secondary)">Loading...</div></div>
+            <div class="panel-header">
+                <span>MINDMAP</span>
+                <button class="icon-btn" onclick="app.toggleMindmapFullscreen()" title="Fullscreen">
+                    <svg class="icon"><use href="#icon-maximize"></use></svg>
+                </button>
+            </div>
+            <div id="mindmap">
+                <div style="text-align:center;padding:50px;color:var(--text-secondary)">Loading...</div>
+            </div>
         </div>
     </div>
 
+    <!-- Status Bar -->
     <div class="status-bar">
         <span id="statusLeft">Ready</span>
-        <span id="statusRight">Lines: 0 | Chars: 0</span>
+        <span id="statusRight">Lines: 0 | Words: 0 | Chars: 0</span>
     </div>
 
-    <input type="file" id="fileInput" accept=".md,.txt" multiple onchange="app.loadFiles(event)">
+    <!-- File Input -->
+    <input type="file" id="fileInput" accept=".md,.txt" multiple onchange="app.loadExternalFiles(event)">
 
     <!-- Settings Modal -->
-    <div class="modal" id="settingsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">⚙️ Settings</div>
-                <button class="icon-btn" onclick="app.closeModal()">
-                    <svg class="icon"><use href="#icon-close"></use></svg>
-                </button>
-            </div>
-            
-            <div class="form-group">
-                <label>App Name</label>
-                <input type="text" id="appNameInput" onchange="app.setAppName(this.value)">
-            </div>
-            
-            <div class="form-group">
-                <label>Toolbar Style</label>
-                <select id="toolbarStyleSelect" onchange="app.setToolbarStyle(this.value)">
-                    <option value="icon-only">Icon Only</option>
-                    <option value="icon-text">Icon & Text</option>
-                    <option value="text-only">Text Only</option>
-                </select>
-            </div>
+<div class="modal" id="settingsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">⚙️ Settings</div>
+            <button class="icon-btn" onclick="app.closeModal()">
+                <svg class="icon"><use href="#icon-close"></use></svg>
+            </button>
+        </div>
 
-            <div class="form-group">
-                <label>Theme</label>
-                <div style="margin:10px 0">
-                    <div class="theme-preset active" data-theme="dark" style="background:linear-gradient(to right,#1e1e1e,#2d2d30)" onclick="app.setTheme('dark')"></div>
-                    <div class="theme-preset" data-theme="light" style="background:linear-gradient(to right,#fff,#f0f0f0)" onclick="app.setTheme('light')"></div>
-                    <div class="theme-preset" data-theme="dracula" style="background:linear-gradient(to right,#282a36,#44475a)" onclick="app.setTheme('dracula')"></div>
-                    <div class="theme-preset" data-theme="nord" style="background:linear-gradient(to right,#2e3440,#3b4252)" onclick="app.setTheme('nord')"></div>
-                    <div class="theme-preset" data-theme="monokai" style="background:linear-gradient(to right,#272822,#3e3d32)" onclick="app.setTheme('monokai')"></div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Font</label>
-                <select id="fontSelect" onchange="app.setFont(this.value)">
-                    <option value="'Consolas',monospace">Consolas</option>
-                    <option value="'Fira Code',monospace">Fira Code</option>
-                    <option value="'Source Code Pro',monospace">Source Code Pro</option>
-                    <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
-                    <option value="'Roboto Mono',monospace">Roboto Mono</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Font Size</label>
-                <select id="sizeSelect" onchange="app.setSize(this.value)">
-                    <option>11px</option>
-                    <option>12px</option>
-                    <option selected>13px</option>
-                    <option>14px</option>
-                    <option>15px</option>
-                    <option>16px</option>
-                </select>
-            </div>
-            <div class="modal-actions">
-                <button class="btn" onclick="app.closeModal()">Close</button>
+        <div class="form-group">
+            <label>App Name</label>
+            <input type="text" id="appNameInput" onchange="app.setAppName(this.value)">
+        </div>
+
+        <div class="form-group">
+            <label>Toolbar Style</label>
+            <select id="toolbarStyleSelect" onchange="app.setToolbarStyle(this.value)">
+                <option value="icon-only">Icon Only</option>
+                <option value="icon-text">Icon & Text</option>
+                <option value="text-only">Text Only</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Theme</label>
+            <div style="margin:10px 0">
+                <div class="theme-preset active" data-theme="dark" style="background:linear-gradient(to right,#1e1e1e,#2d2d30)" onclick="app.setTheme('dark')"></div>
+                <div class="theme-preset" data-theme="light" style="background:linear-gradient(to right,#fff,#f0f0f0)" onclick="app.setTheme('light')"></div>
+                <div class="theme-preset" data-theme="dracula" style="background:linear-gradient(to right,#282a36,#44475a)" onclick="app.setTheme('dracula')"></div>
+                <div class="theme-preset" data-theme="nord" style="background:linear-gradient(to right,#2e3440,#3b4252)" onclick="app.setTheme('nord')"></div>
+                <div class="theme-preset" data-theme="monokai" style="background:linear-gradient(to right,#272822,#3e3d32)" onclick="app.setTheme('monokai')"></div>
             </div>
         </div>
-    </div>
 
-    <!-- New File Modal -->
-    <div class="modal" id="newFileModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">New File</div>
-                <button class="icon-btn" onclick="app.closeModal()">
-                    <svg class="icon"><use href="#icon-close"></use></svg>
-                </button>
-            </div>
-            <div class="form-group">
-                <label>Filename:</label>
-                <input type="text" id="newFileName" placeholder="filename.md">
-            </div>
-            <div class="modal-actions">
-                <button class="btn" onclick="app.closeModal()">Cancel</button>
-                <button class="btn" onclick="app.createFile()">Create</button>
-            </div>
+        <div class="form-group">
+            <label>Font</label>
+            <select id="fontSelect" onchange="app.setFont(this.value)">
+                <option value="'Consolas',monospace">Consolas</option>
+                <option value="'Fira Code',monospace">Fira Code</option>
+                <option value="'Source Code Pro',monospace">Source Code Pro</option>
+                <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
+                <option value="'Roboto Mono',monospace">Roboto Mono</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Font Size</label>
+            <select id="sizeSelect" onchange="app.setFontSize(this.value)">
+                <option>11px</option>
+                <option>12px</option>
+                <option selected>13px</option>
+                <option>14px</option>
+                <option>15px</option>
+                <option>16px</option>
+                <option>18px</option>
+            </select>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn" onclick="app.closeModal()">Close</button>
         </div>
     </div>
+</div>
 
-    <!-- Templates/Settings Modal -->
-    <div class="modal" id="templatesModal">
-        <div class="modal-content" style="min-width:600px">
-            <div class="modal-header">
-                <div class="modal-title">📋 Presentation Settings</div>
-                <button class="icon-btn" onclick="app.closeModal()">
-                    <svg class="icon"><use href="#icon-close"></use></svg>
-                </button>
-            </div>
-            <div class="form-group">
-                <label>Template:</label>
-                <select id="templateSelect">
-                    <option value="basic">Basic Presentation</option>
-                    <option value="principles">7 Guiding Principles</option>
-                    <option value="practices">7 Critical Practices</option>
-                    <option value="svc">Service Value Chain</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Reveal.js Theme:</label>
-                <select id="revealThemeSelect">
-                    <option value="black">Black (Default)</option>
-                    <option value="white">White</option>
-                    <option value="league">League</option>
-                    <option value="sky">Sky</option>
-                    <option value="beige">Beige</option>
-                    <option value="serif">Serif</option>
-                    <option value="simple">Simple</option>
-                    <option value="solarized">Solarized</option>
-                </select>
-            </div>
-            <div class="modal-actions">
-                <button class="btn" onclick="app.closeModal()">Cancel</button>
-                <button class="btn" onclick="app.applyTemplateAndSettings()">Apply</button>
-            </div>
+<!-- New File Modal -->
+<div class="modal" id="newFileModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">New File</div>
+            <button class="icon-btn" onclick="app.closeModal()">
+                <svg class="icon"><use href="#icon-close"></use></svg>
+            </button>
+        </div>
+        <div class="form-group">
+            <label>Filename:</label>
+            <input type="text" id="newFileName" placeholder="filename.md" onkeypress="if(event.key==='Enter') app.createFile()">
+        </div>
+        <div class="modal-actions">
+            <button class="btn" onclick="app.closeModal()">Cancel</button>
+            <button class="btn" onclick="app.createFile()">Create</button>
         </div>
     </div>
+</div>
 
-    <!-- Help Modal -->
-    <div class="modal" id="helpModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">💡 Help & Info</div>
-                <button class="icon-btn" onclick="app.closeModal()">
-                    <svg class="icon"><use href="#icon-close"></use></svg>
-                </button>
-            </div>
-            
-            <h2>Benvenuto nell'Editor</h2>
-            <p>Questo è un editor Markdown ibrido progettato per la prototipazione rapida, la presa di appunti e la creazione di presentazioni. Combina un editor di testo, un'anteprima, un generatore di mindmap e un motore di presentazioni (Reveal.js) in un'unica interfaccia.</p>
-
-            <h2>Funzionalità Principali</h2>
-            <ul>
-                <li><p><b>Editor & Preview:</b> Scrivi in Markdown sull'editor e vedi l'anteprima HTML renderizzata in tempo reale nel pannello "Preview".</p></li>
-                <li><p><b>Mindmap:</b> Il pannello "Mindmap" converte automaticamente la struttura del tuo documento (usando le intestazioni <code>#</code>, <code>##</code>, ecc.) in una mappa mentale navigabile.</p></li>
-                <li><p><b>Presentazioni:</b> Usa il pulsante "Present" (icona Play) per trasformare il tuo Markdown in una presentazione navigabile. Separa le slide usando <code>---</code> nel tuo documento.</p></li>
-                <li><p><b>Diagrammi:</b> L'editor supporta i diagrammi Mermaid.js. Includi un blocco di codice <code>```mermaid ... ```</code> nel tuo testo e verrà renderizzato come diagramma nel pannello "Preview".</p></li>
-            </ul>
-
-            <h2>Sintassi di Base</h2>
-            <p>Usa la toolbar di formattazione sopra l'editor o scrivi direttamente:
-                <ul>
-                    <li><code># Titolo 1</code>, <code>## Titolo 2</code></li>
-                    <li><code>**grassetto**</code>, <code>*corsivo*</code>, <code>`codice`</code></li>
-                    <li><code>- Lista non ordinata</code>, <code>1. Lista ordinata</code></li>
-                    <li><code>[Testo link](http://...)</code>, <code>![Testo Alt](img_url)</code></li>
-                    <li><code>> Citazione</code></li>
-                </ul>
-            </p>
-            
-            <h2>Scorciatoie</h2>
-            <ul>
-                <li><p><kbd>Ctrl</kbd> + <kbd>S</kbd> (o <kbd>Cmd</kbd> + <kbd>S</kbd>): Salva il file corrente.</p></li>
-                <li><p><kbd>Ctrl</kbd> + <kbd>N</kbd> (o <kbd>Cmd</kbd> + <kbd>N</kbd>): Crea un nuovo file.</p></li>
-            </ul>
+<!-- Presentation Templates Modal -->
+<div class="modal" id="templatesModal">
+    <div class="modal-content" style="min-width:600px">
+        <div class="modal-header">
+            <div class="modal-title">📋 Presentation Templates</div>
+            <button class="icon-btn" onclick="app.closeModal()">
+                <svg class="icon"><use href="#icon-close"></use></svg>
+            </button>
+        </div>
+        <div class="form-group">
+            <label>Template:</label>
+            <select id="templateSelect">
+                <option value="basic">Basic Presentation</option>
+                <option value="principles">7 Key Principles</option>
+                <option value="timeline">Timeline & Gantt Charts</option>
+                <option value="charts">Chart Examples</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Reveal.js Theme:</label>
+            <select id="revealThemeSelect">
+                <option value="black">Black (Default)</option>
+                <option value="white">White</option>
+                <option value="league">League</option>
+                <option value="sky">Sky</option>
+                <option value="beige">Beige</option>
+                <option value="serif">Serif</option>
+                <option value="simple">Simple</option>
+                <option value="solarized">Solarized</option>
+                <option value="night">Night</option>
+                <option value="moon">Moon</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" onclick="app.closeModal()">Cancel</button>
+            <button class="btn" onclick="app.applyTemplateAndSettings()">Apply</button>
         </div>
     </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal" id="helpModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">💡 Help & Info</div>
+            <button class="icon-btn" onclick="app.closeModal()">
+                <svg class="icon"><use href="#icon-close"></use></svg>
+            </button>
+        </div>
+
+        <h2>Welcome to MDNotes Pro</h2>
+        <p>A professional markdown editor with advanced presentation and visualization capabilities.</p>
+
+        <h2>Key Features</h2>
+        <ul>
+            <li><p><b>CodeMirror Editor:</b> Advanced code editing with syntax highlighting and shortcuts</p></li>
+            <li><p><b>Live Preview:</b> Real-time markdown rendering with diagram support</p></li>
+            <li><p><b>Mindmap:</b> Automatic mindmap generation from document structure</p></li>
+            <li><p><b>Presentations:</b> Create slides with Reveal.js (separate with <code>---</code>)</p></li>
+            <li><p><b>Diagrams:</b> Mermaid flowcharts, timelines, Gantt charts</p></li>
+            <li><p><b>Charts:</b> Data visualization with Chart.js</p></li>
+            <li><p><b>Export:</b> MD, HTML, PDF (preview & slides), PowerPoint</p></li>
+            <li><p><b>Fullscreen:</b> All panels support fullscreen mode</p></li>
+        </ul>
+
+        <h2>Keyboard Shortcuts</h2>
+        <ul>
+            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>S</kbd>: Save file</li>
+            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>N</kbd>: New file</li>
+            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>B</kbd>: Bold</li>
+            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>I</kbd>: Italic</li>
+            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>K</kbd>: Insert link</li>
+        </ul>
+
+        <h2>Markdown Syntax</h2>
+        <ul>
+            <li><code># Heading 1</code>, <code>## Heading 2</code>, etc.</li>
+            <li><code>**bold**</code>, <code>*italic*</code>, <code>`code`</code></li>
+            <li><code>- List item</code>, <code>1. Numbered item</code></li>
+            <li><code>[Link text](url)</code>, <code>![Alt text](image-url)</code></li>
+            <li><code>> Blockquote</code></li>
+            <li><code>```language ... ```</code> for code blocks</li>
+        </ul>
+
+        <h2>Diagram Types</h2>
+        <p>Use code blocks with these languages:</p>
+        <ul>
+            <li><code>```mermaid</code> - Flowcharts, sequence diagrams, etc.</li>
+            <li><code>```chart</code> - Chart.js data visualizations (JSON format)</li>
+        </ul>
+
+        <div class="modal-actions">
+            <button class="btn" onclick="app.closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 
     <!-- Loading Spinner -->
     <div class="spinner-overlay" id="spinnerOverlay">
@@ -661,663 +1075,2537 @@
         <span id="spinnerText">Loading...</span>
     </div>
 
-    <!-- Core Libraries -->
+    <!-- SVG Icon Sprite Sheet -->
+<svg width="0" height="0" style="position:absolute; display:none;">
+    <defs>
+        <symbol id="icon-folder" viewBox="0 0 24 24">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </symbol>
+        <symbol id="icon-edit" viewBox="0 0 24 24">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </symbol>
+        <symbol id="icon-eye" viewBox="0 0 24 24">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+        </symbol>
+        <symbol id="icon-git-branch" viewBox="0 0 24 24">
+            <line x1="6" y1="3" x2="6" y2="15"></line>
+            <circle cx="18" cy="6" r="3"></circle>
+            <circle cx="6" cy="18" r="3"></circle>
+            <path d="M18 9a9 9 0 0 1-9 9"></path>
+        </symbol>
+        <symbol id="icon-save" viewBox="0 0 24 24">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+        </symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </symbol>
+        <symbol id="icon-play" viewBox="0 0 24 24">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </symbol>
+        <symbol id="icon-sliders" viewBox="0 0 24 24">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+        </symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </symbol>
+        <symbol id="icon-help" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </symbol>
+        <symbol id="icon-close" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </symbol>
+        <symbol id="icon-trash" viewBox="0 0 24 24">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </symbol>
+        <symbol id="icon-maximize" viewBox="0 0 24 24">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+        </symbol>
+        <symbol id="icon-minimize" viewBox="0 0 24 24">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+        </symbol>
+        <symbol id="icon-bold" viewBox="0 0 24 24">
+            <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+            <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+        </symbol>
+        <symbol id="icon-italic" viewBox="0 0 24 24">
+            <line x1="19" y1="4" x2="10" y2="4"></line>
+            <line x1="14" y1="20" x2="5" y2="20"></line>
+            <line x1="15" y1="4" x2="9" y2="20"></line>
+        </symbol>
+        <symbol id="icon-code" viewBox="0 0 24 24">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+        </symbol>
+        <symbol id="icon-quote" viewBox="0 0 24 24">
+            <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2-2-2H4c-1.25 0-2 .75-2 2v8c0 1.25.75 2 2 2h2"></path>
+            <path d="M14 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v8c0 1.25.75 2 2 2h2"></path>
+        </symbol>
+        <symbol id="icon-list" viewBox="0 0 24 24">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </symbol>
+        <symbol id="icon-ol" viewBox="0 0 24 24">
+            <line x1="10" y1="6" x2="21" y2="6"></line>
+            <line x1="10" y1="12" x2="21" y2="12"></line>
+            <line x1="10" y1="18" x2="21" y2="18"></line>
+            <path d="M4 6h1v4"></path>
+            <path d="M4 10h2"></path>
+            <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
+        </symbol>
+        <symbol id="icon-check-square" viewBox="0 0 24 24">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+        </symbol>
+        <symbol id="icon-link" viewBox="0 0 24 24">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </symbol>
+        <symbol id="icon-image" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+        </symbol>
+        <symbol id="icon-code-block" viewBox="0 0 24 24">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+        </symbol>
+        <symbol id="icon-file-text" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+        </symbol>
+        <symbol id="icon-file" viewBox="0 0 24 24">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+            <polyline points="13 2 13 9 20 9"></polyline>
+        </symbol>
+        <symbol id="icon-presentation" viewBox="0 0 24 24">
+            <path d="M2 3h20"></path>
+            <path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path>
+            <path d="M7 21l5-5 5 5"></path>
+        </symbol>
+    </defs>
+</svg>
+
+
+    <!-- External JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader"></script>
-    
-    <!-- Reveal.js -->
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/markdown/markdown.js"></script>
-    
-    <!-- PDF Export Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-    <!-- Marked Extensions -->
     <script src="https://cdn.jsdelivr.net/npm/marked-gfm-heading-id/lib/index.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked-highlight/lib/index.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-
-    <!-- Diagram Library -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/match-highlighter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/scroll/annotatescrollbar.min.js"></script>
 
-    <script>
-const app = {
-    files: {}, 
-    currentFile: null, 
-    views: {editor:true, preview:false, mindmap:false},
-    mm: null, 
-    reveal: null, 
-    presentMode: false,
-    settings: {
-        theme:'dark', 
-        font:"'Consolas',monospace", 
-        size:'13px',
-        revealTheme: 'black',
-        appName: 'ITIL 4 Editor',
-        toolbarStyle: 'icon-only' // Aggiunto: icon-only, icon-text, text-only
+    <!-- Application JavaScript (ES6 Modules) -->
+    <script type="module">
+        /**
+ * Storage Module - Handles localStorage operations
+ */
+const Storage = {
+    keys: {
+        files: 'mdnotes_files',
+        settings: 'mdnotes_settings_v2'
     },
-    
+
+    /**
+     * Load files from localStorage
+     */
+    loadFiles() {
+        try {
+            const data = localStorage.getItem(this.keys.files);
+            return data ? JSON.parse(data) : {};
+        } catch (e) {
+            console.error('Failed to load files:', e);
+            return {};
+        }
+    },
+
+    /**
+     * Save files to localStorage
+     */
+    saveFiles(files) {
+        try {
+            localStorage.setItem(this.keys.files, JSON.stringify(files));
+            return true;
+        } catch (e) {
+            console.error('Failed to save files:', e);
+            return false;
+        }
+    },
+
+    /**
+     * Load settings from localStorage
+     */
+    loadSettings() {
+        try {
+            const data = localStorage.getItem(this.keys.settings);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.error('Failed to load settings:', e);
+            return null;
+        }
+    },
+
+    /**
+     * Save settings to localStorage
+     */
+    saveSettings(settings) {
+        try {
+            localStorage.setItem(this.keys.settings, JSON.stringify(settings));
+            return true;
+        } catch (e) {
+            console.error('Failed to save settings:', e);
+            return false;
+        }
+    },
+
+    /**
+     * Clear all storage
+     */
+    clear() {
+        try {
+            localStorage.removeItem(this.keys.files);
+            localStorage.removeItem(this.keys.settings);
+            return true;
+        } catch (e) {
+            console.error('Failed to clear storage:', e);
+            return false;
+        }
+    },
+
+    /**
+     * Get storage usage info
+     */
+    getStorageInfo() {
+        let total = 0;
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                total += localStorage[key].length + key.length;
+            }
+        }
+        return {
+            used: total,
+            usedKB: (total / 1024).toFixed(2),
+            usedMB: (total / (1024 * 1024)).toFixed(2)
+        };
+    }
+};
+
+
+/**
+ * Theme Module - Handles theme management
+ */
+const Theme = {
     themes: {
-        dark: {'--bg-primary':'#1e1e1e','--bg-secondary':'#252526','--bg-tertiary':'#2d2d30','--text-primary':'#d4d4d4','--text-secondary':'#808080','--border':'#3e3e42','--accent':'#007acc'},
-        light: {'--bg-primary':'#fff','--bg-secondary':'#f0f0f0','--bg-tertiary':'#e0e0e0','--text-primary':'#000','--text-secondary':'#666','--border':'#ccc','--accent':'#0066cc'},
-        dracula: {'--bg-primary':'#282a36','--bg-secondary':'#1e1f29','--bg-tertiary':'#44475a','--text-primary':'#f8f8f2','--text-secondary':'#6272a4','--border':'#44475a','--accent':'#bd93f9'},
-        nord: {'--bg-primary':'#2e3440','--bg-secondary':'#3b4252','--bg-tertiary':'#434c5e','--text-primary':'#eceff4','--text-secondary':'#d8dee9','--border':'#4c566a','--accent':'#88c0d0'},
-        monokai: {'--bg-primary':'#272822','--bg-secondary':'#1e1f1c','--bg-tertiary':'#3e3d32','--text-primary':'#f8f8f2','--text-secondary':'#75715e','--border':'#3e3d32','--accent':'#66d9ef'}
+        dark: {
+            '--bg-primary': '#1e1e1e',
+            '--bg-secondary': '#252526',
+            '--bg-tertiary': '#2d2d30',
+            '--text-primary': '#d4d4d4',
+            '--text-secondary': '#808080',
+            '--border': '#3e3e42',
+            '--accent': '#007acc'
+        },
+        light: {
+            '--bg-primary': '#fff',
+            '--bg-secondary': '#f0f0f0',
+            '--bg-tertiary': '#e0e0e0',
+            '--text-primary': '#000',
+            '--text-secondary': '#666',
+            '--border': '#ccc',
+            '--accent': '#0066cc'
+        },
+        dracula: {
+            '--bg-primary': '#282a36',
+            '--bg-secondary': '#1e1f29',
+            '--bg-tertiary': '#44475a',
+            '--text-primary': '#f8f8f2',
+            '--text-secondary': '#6272a4',
+            '--border': '#44475a',
+            '--accent': '#bd93f9'
+        },
+        nord: {
+            '--bg-primary': '#2e3440',
+            '--bg-secondary': '#3b4252',
+            '--bg-tertiary': '#434c5e',
+            '--text-primary': '#eceff4',
+            '--text-secondary': '#d8dee9',
+            '--border': '#4c566a',
+            '--accent': '#88c0d0'
+        },
+        monokai: {
+            '--bg-primary': '#272822',
+            '--bg-secondary': '#1e1f1c',
+            '--bg-tertiary': '#3e3d32',
+            '--text-primary': '#f8f8f2',
+            '--text-secondary': '#75715e',
+            '--border': '#3e3d32',
+            '--accent': '#66d9ef'
+        }
     },
-    
-    templates: {
-        basic: `---\ntheme: black\n---\n\n# ITIL 4\n\n---\n\n## Slide 2\n\nContent...`,
-        principles: `---\ntheme: black\n---\n\n# 7 Guiding Principles\n\n---\n\n## 1. Focus on Value\n\n---\n\n## 2. Start Where You Are`,
-        practices: `---\ntheme: black\n---\n\n# 7 Critical Practices\n\n---\n\n## Incident Management`,
-        svc: `---\ntheme: black\n---\n\n# Service Value Chain\n\n---\n\n## Plan → Improve → Engage`
+
+    currentTheme: 'dark',
+
+    /**
+     * Apply a theme
+     */
+    apply(themeName) {
+        const theme = this.themes[themeName];
+        if (!theme) {
+            console.warn(`Theme '${themeName}' not found`);
+            return false;
+        }
+
+        // Apply CSS variables
+        Object.keys(theme).forEach(key => {
+            document.documentElement.style.setProperty(key, theme[key]);
+        });
+
+        // Update data attribute
+        document.documentElement.setAttribute('data-theme', themeName);
+
+        this.currentTheme = themeName;
+
+        // Update theme presets
+        document.querySelectorAll('.theme-preset').forEach(el => {
+            el.classList.toggle('active', el.dataset.theme === themeName);
+        });
+
+        // Sync Mermaid theme
+        if (window.mermaid) {
+            const mermaidTheme = (themeName === 'light') ? 'default' : 'dark';
+            window.mermaid.initialize({ startOnLoad: false, theme: mermaidTheme });
+        }
+
+        return true;
     },
-    
+
+    /**
+     * Get current theme name
+     */
+    getCurrent() {
+        return this.currentTheme;
+    },
+
+    /**
+     * Get all available themes
+     */
+    getAll() {
+        return Object.keys(this.themes);
+    }
+};
+
+
+/**
+ * File Manager Module - Handles file operations
+ */
+class FileManager {
+    constructor(storage) {
+        this.storage = storage;
+        this.files = {};
+        this.currentFile = null;
+        this.onFileChange = null; // Callback when file changes
+    }
+
+    /**
+     * Initialize file manager
+     */
     init() {
-        this.initMarked();
-        // Init Mermaid
-        mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+        this.files = this.storage.loadFiles();
 
-        this.loadStorage();
-        if (!Object.keys(this.files).length) {
-            this.files['welcome.md'] = {
-                name:'welcome.md', 
-                content:`# Welcome to the Editor
+        // Create welcome file if no files exist
+        if (Object.keys(this.files).length === 0) {
+            this.createWelcomeFile();
+        }
+
+        this.currentFile = Object.keys(this.files)[0];
+        this.render();
+    }
+
+    /**
+     * Create welcome file
+     */
+    createWelcomeFile() {
+        this.files['welcome.md'] = {
+            name: 'welcome.md',
+            content: `# Welcome to MDNotes Pro
+
 ## Features
-- **Markdown Toolbar**
-- **Presentation Themes**
-- **PDF Export** (Preview & Slides)
-- **Code Syntax Highlighting**
+
+- **Advanced Editor** with CodeMirror
+- **Fullscreen Mode** for all panels
+- **Professional Export** (MD, HTML, PDF, PPTX)
+- **Presentation Themes** via Reveal.js
 - **Mindmap Generation**
+- **Diagram Support** (Mermaid, Charts, Timelines)
 
-## Diagram Support (Mermaid.js)
-L'anteprima ora renderizza i diagrammi Mermaid!
+## Quick Start
 
+1. Write your markdown in the **Editor** panel
+2. Preview it in real-time
+3. Generate mindmaps from headings
+4. Create presentations with \`---\` separators
+5. Export to multiple formats
+
+## Diagram Examples
+
+### Mermaid Flowchart
 \`\`\`mermaid
 graph TD
-    A[Start] --> B(Process)
-    B --> C{Decision}
-    C -->|Yes| D[End]
-    C -->|No| B
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Success]
+    B -->|No| D[Retry]
+    D --> A
 \`\`\`
-`, 
-                modified:Date.now()
-            };
-        }
-        this.currentFile = Object.keys(this.files)[0];
-        this.applySettings();
-        this.render();
-        document.getElementById('editor').addEventListener('input', () => {
-            this.updatePreview();
-            this.updateStatus();
-            this.save();
-        });
-        setTimeout(() => this.initMindmap(), 1000);
 
-        // Close dropdown if clicking outside
-        document.body.addEventListener('click', (e) => {
-            if (!e.target.closest('.export-btn-group')) {
-                document.getElementById('exportMenu').classList.remove('show');
-            }
-        });
-    },
+### Gantt Timeline
+\`\`\`mermaid
+gantt
+    title Project Timeline
+    dateFormat YYYY-MM-DD
+    section Phase 1
+    Design :2024-01-01, 30d
+    Development :2024-02-01, 60d
+    section Phase 2
+    Testing :2024-04-01, 30d
+    Deployment :2024-05-01, 15d
+\`\`\`
 
-    initMarked() {
-        // Setup marked with extensions
-        marked.use(markedGfmHeadingId.gfmHeadingId());
-        marked.use(markedHighlight.markedHighlight({
-            langPrefix: 'language-',
-            highlight(code, lang) {
-                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-                return hljs.highlight(code, { language }).value;
-            }
-        }));
-    },
-    
-    loadStorage() {
-        try {
-            const f = localStorage.getItem('itil_files');
-            if (f) this.files = JSON.parse(f);
-            const s = localStorage.getItem('itil_settings_v4'); // Key v4
-            if (s) {
-                 const loadedSettings = JSON.parse(s);
-                 this.settings = { ...this.settings, ...loadedSettings };
-            }
-        } catch(e) {
-            console.error("Failed to load from storage:", e);
-        }
-    },
-    
-    saveStorage() {
-        try {
-            localStorage.setItem('itil_files', JSON.stringify(this.files));
-            localStorage.setItem('itil_settings_v4', JSON.stringify(this.settings));
-        } catch(e) {
-            console.error("Failed to save to storage:", e);
-        }
-    },
-    
-    applySettings() {
-        this.setTheme(this.settings.theme, false);
-        this.setFont(this.settings.font, false);
-        this.setSize(this.settings.size, false);
-        this.setRevealTheme(this.settings.revealTheme, false);
-        this.setAppName(this.settings.appName, false);
-        this.setToolbarStyle(this.settings.toolbarStyle, false); // Aggiunto
-    },
-    
-    setTheme(name, save=true) {
-        const t = this.themes[name];
-        if (!t) return;
-        Object.keys(t).forEach(k => document.documentElement.style.setProperty(k,t[k]));
-        this.settings.theme = name;
-        
-        // Sincronizza tema Mermaid
-        const mermaidTheme = (name === 'light') ? 'default' : 'dark';
-        mermaid.initialize({ startOnLoad: false, theme: mermaidTheme });
-        
-        if (save) this.saveStorage();
-        document.querySelectorAll('.theme-preset').forEach(el => 
-            el.classList.toggle('active', el.dataset.theme === name));
+### Chart
+\`\`\`chart
+{
+  "type": "bar",
+  "data": {
+    "labels": ["Q1", "Q2", "Q3", "Q4"],
+    "datasets": [{
+      "label": "Revenue",
+      "data": [12, 19, 15, 25]
+    }]
+  }
+}
+\`\`\`
 
-        // Forza re-render del preview per aggiornare i diagrammi
-        if (this.views.preview) {
-            this.updatePreview(); 
-        }
-    },
-    
-    setFont(f, save=true) {
-        document.documentElement.style.setProperty('--font-family', f);
-        this.settings.font = f;
-        if (save) this.saveStorage();
-        document.getElementById('fontSelect').value = f;
-    },
-    
-    setSize(s, save=true) {
-        document.getElementById('editor').style.fontSize = s;
-        document.getElementById('preview').style.fontSize = s;
-        this.settings.size = s;
-        if (save) this.saveStorage();
-        document.getElementById('sizeSelect').value = s;
-    },
+---
 
-    setRevealTheme(theme, save=true) {
-        document.getElementById('revealTheme').href = `https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/theme/${theme}.css`;
-        this.settings.revealTheme = theme;
-        if (save) this.saveStorage();
-        document.getElementById('revealThemeSelect').value = theme;
-    },
+**Happy editing!** 🚀
+`,
+            modified: Date.now()
+        };
+    }
 
-    setAppName(name, save=true) {
-        if (!name) name = "Markdown Editor"; // Fallback
-        document.querySelector('#appTitle span').textContent = name;
-        this.settings.appName = name;
-        if (save) {
-            this.saveStorage();
-            this.showStatus("App name updated!", "success");
-        }
-    },
-    
-    setToolbarStyle(style, save=true) {
-        document.body.dataset.toolbarStyle = style;
-        this.settings.toolbarStyle = style;
-        if (save) this.saveStorage();
-        document.getElementById('toolbarStyleSelect').value = style;
-    },
-    
+    /**
+     * Render file list
+     */
     render() {
         const list = document.getElementById('fileList');
+        if (!list) return;
+
         list.innerHTML = '';
-        
-        Object.values(this.files).forEach(f => {
+
+        Object.values(this.files).forEach(file => {
             const item = document.createElement('div');
-            item.className = 'file-item' + (f.name === this.currentFile ? ' active' : '');
-            item.innerHTML = `<span>${f.name}</span>
-                <button class="delete-btn" onclick="event.stopPropagation();app.deleteFile('${f.name}')" title="Delete file">
+            item.className = 'file-item' + (file.name === this.currentFile ? ' active' : '');
+            item.innerHTML = `
+                <span>${file.name}</span>
+                <button class="delete-btn" title="Delete file">
                     <svg class="icon" style="width:14px; height:14px"><use href="#icon-trash"></use></svg>
-                </button>`;
-            item.onclick = () => this.switchFile(f.name);
+                </button>
+            `;
+
+            item.querySelector('span').onclick = () => this.switchFile(file.name);
+            item.querySelector('.delete-btn').onclick = (e) => {
+                e.stopPropagation();
+                this.deleteFile(file.name);
+            };
+
             list.appendChild(item);
         });
-        
-        this.loadFile();
-    },
-    
-    loadFile() {
-        const f = this.files[this.currentFile];
-        if (!f) {
-            document.getElementById('editor').value = "";
-            this.updatePreview();
-            this.updateStatus();
-            return;
-        }
-        document.getElementById('editor').value = f.content;
-        this.updatePreview();
-        this.updateStatus();
-    },
-    
-    switchFile(name) {
-        if (this.presentMode) this.togglePresentation();
-        this.saveFile();
-        this.currentFile = name;
+    }
+
+    /**
+     * Switch to a different file
+     */
+    switchFile(filename) {
+        if (filename === this.currentFile) return;
+
+        this.currentFile = filename;
         this.render();
-    },
-    
-    newFile() {
-        document.getElementById('newFileModal').classList.add('show');
-        document.getElementById('newFileName').value = '';
-        document.getElementById('newFileName').focus();
-    },
-    
-    createFile() {
-        let name = document.getElementById('newFileName').value.trim();
-        if (!name) {
-            this.showStatus("Filename cannot be empty", "error");
-            return;
+
+        if (this.onFileChange) {
+            this.onFileChange(this.files[filename]);
         }
-        if (!name.endsWith('.md')) name += '.md';
-        if (this.files[name]) {
-            this.showStatus("File already exists", "error");
-            return;
+    }
+
+    /**
+     * Get current file
+     */
+    getCurrentFile() {
+        return this.files[this.currentFile];
+    }
+
+    /**
+     * Save current file content
+     */
+    saveCurrentFile(content) {
+        if (!this.currentFile) return false;
+
+        this.files[this.currentFile].content = content;
+        this.files[this.currentFile].modified = Date.now();
+        this.storage.saveFiles(this.files);
+
+        return true;
+    }
+
+    /**
+     * Create new file
+     */
+    createFile(filename, content = '') {
+        if (!filename) {
+            throw new Error('Filename is required');
         }
-        this.files[name] = {name, content:'# '+name.replace('.md',''), modified:Date.now()};
-        this.currentFile = name;
-        this.saveStorage();
+
+        if (!filename.endsWith('.md')) {
+            filename += '.md';
+        }
+
+        if (this.files[filename]) {
+            throw new Error('File already exists');
+        }
+
+        this.files[filename] = {
+            name: filename,
+            content: content || `# ${filename.replace('.md', '')}`,
+            modified: Date.now()
+        };
+
+        this.currentFile = filename;
+        this.storage.saveFiles(this.files);
         this.render();
-        this.closeModal();
-    },
-    
-    deleteFile(name) {
-        if (!confirm('Delete '+name+'?')) return;
-        delete this.files[name];
-        if (this.currentFile === name) {
+
+        if (this.onFileChange) {
+            this.onFileChange(this.files[filename]);
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete file
+     */
+    deleteFile(filename) {
+        if (!confirm(`Delete ${filename}?`)) return false;
+
+        delete this.files[filename];
+
+        if (this.currentFile === filename) {
             const keys = Object.keys(this.files);
             this.currentFile = keys.length ? keys[0] : null;
         }
-        this.saveStorage();
+
+        this.storage.saveFiles(this.files);
         this.render();
-    },
-    
-    loadFiles(e) {
-        Array.from(e.target.files).forEach(file => {
-            const r = new FileReader();
-            r.onload = ev => {
-                this.files[file.name] = {name:file.name, content:ev.target.result, modified:Date.now()};
+
+        if (this.currentFile && this.onFileChange) {
+            this.onFileChange(this.files[this.currentFile]);
+        }
+
+        return true;
+    }
+
+    /**
+     * Load external files
+     */
+    loadExternalFiles(fileList) {
+        Array.from(fileList).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.files[file.name] = {
+                    name: file.name,
+                    content: e.target.result,
+                    modified: Date.now()
+                };
                 this.currentFile = file.name;
-                this.saveStorage();
+                this.storage.saveFiles(this.files);
                 this.render();
+
+                if (this.onFileChange) {
+                    this.onFileChange(this.files[file.name]);
+                }
             };
-            r.readAsText(file);
+            reader.readAsText(file);
         });
-    },
-    
-    saveFile() {
-        if (!this.currentFile) return;
-        this.files[this.currentFile].content = document.getElementById('editor').value;
-        this.files[this.currentFile].modified = Date.now();
-        this.showStatus("File saved!", "success");
-    },
-    
-    save() {
-        this.saveFile();
-        this.saveStorage();
-    },
+    }
 
-    toggleExportMenu() {
-        document.getElementById('exportMenu').classList.toggle('show');
-    },
-
-    exportAs(fmt) {
-        this.toggleExportMenu(); // Close menu
-        const content = document.getElementById('editor').value;
-        const name = this.currentFile ? this.currentFile.replace('.md','') : 'document';
-        
-        switch(fmt) {
-            case 'md':
-                this.download(content, name+'.md', 'text/markdown');
-                break;
-            case 'html':
-                const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${name}</title><style>body{font-family:${this.settings.font};max-width:800px;margin:40px auto;padding:20px;background:${this.themes[this.settings.theme]['--bg-primary']};color:${this.themes[this.settings.theme]['--text-primary']};line-height:1.6}</style></head><body>${marked.parse(content)}</body></html>`;
-                this.download(html, name+'.html', 'text/html');
-                break;
-            case 'pdf-preview':
-                this.exportPreviewToPDF();
-                break;
-            case 'pdf-slides':
-                this.exportSlidesToPDF();
-                break;
+    /**
+     * Toggle file manager visibility
+     */
+    toggleVisibility() {
+        const fm = document.getElementById('fileManager');
+        if (fm) {
+            fm.classList.toggle('hidden');
         }
-    },
-    
-    download(content, filename, type) {
-        const blob = new Blob([content], {type});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-    },
+    }
 
-    async exportPreviewToPDF() {
-        this.showSpinner("Generating PDF (Preview)...");
-        try {
-            const { jsPDF } = window.jspdf;
-            const previewEl = document.getElementById('preview');
-            const canvas = await html2canvas(previewEl, { scale: 2 });
-            const imgData = canvas.toDataURL('image/png');
-            
-            const pdf = new jsPDF('p', 'px', [canvas.width, canvas.height]);
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-            pdf.save(this.currentFile.replace('.md', '') + '_preview.pdf');
-        } catch (e) {
-            console.error("PDF Preview Export Error:", e);
-            this.showStatus("Error exporting PDF", "error");
+    /**
+     * Get all files
+     */
+    getAllFiles() {
+        return this.files;
+    }
+}
+
+
+/**
+ * Editor Module - Handles editor with CodeMirror integration
+ */
+class Editor {
+    constructor() {
+        this.cm = null; // CodeMirror instance
+        this.fallbackTextarea = null;
+        this.onChange = null; // Callback when content changes
+        this.useCodeMirror = true;
+    }
+
+    /**
+     * Initialize editor
+     */
+    async init() {
+        const container = document.getElementById('editor');
+        if (!container) {
+            console.error('Editor container not found');
+            return false;
         }
-        this.hideSpinner();
-    },
 
-    async exportSlidesToPDF() {
-        this.showSpinner("Generating PDF (Slides)... This may take a moment.");
-        
         try {
-            const { jsPDF } = window.jspdf;
-            const wasPresenting = this.presentMode;
-            if (!wasPresenting) {
-                await this.initReveal(true);
+            // Try to initialize CodeMirror
+            if (this.useCodeMirror && window.CodeMirror) {
+                await this.initCodeMirror(container);
+            } else {
+                this.initFallback(container);
             }
 
-            const totalSlides = this.reveal.getTotalSlides();
-            if (totalSlides === 0) {
-                this.showStatus("No slides found to export", "error");
-                this.hideSpinner();
-                if (!wasPresenting) this.destroyReveal();
-                return;
+            return true;
+        } catch (error) {
+            console.warn('CodeMirror failed, using fallback:', error);
+            this.initFallback(container);
+            return true;
+        }
+    }
+
+    /**
+     * Initialize CodeMirror
+     */
+    async initCodeMirror(container) {
+        this.cm = window.CodeMirror.fromTextArea(container, {
+            mode: 'markdown',
+            theme: 'default',
+            lineNumbers: true,
+            lineWrapping: true,
+            autofocus: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: false,
+            extraKeys: {
+                'Ctrl-S': () => { /* handled globally */ },
+                'Cmd-S': () => { /* handled globally */ },
+                'Ctrl-B': () => this.insertMarkdown('**', '**', 'bold'),
+                'Cmd-B': () => this.insertMarkdown('**', '**', 'bold'),
+                'Ctrl-I': () => this.insertMarkdown('*', '*', 'italic'),
+                'Cmd-I': () => this.insertMarkdown('*', '*', 'italic'),
+                'Ctrl-K': () => this.insertMarkdown('[', '](url)', 'link'),
+                'Cmd-K': () => this.insertMarkdown('[', '](url)', 'link')
+            },
+            // Additional addons
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            styleActiveLine: true,
+            highlightSelectionMatches: {
+                showToken: /\w/,
+                annotateScrollbar: true
+            }
+        });
+
+        // Set change handler
+        this.cm.on('change', () => {
+            if (this.onChange) {
+                this.onChange(this.getValue());
+            }
+        });
+
+        console.log('CodeMirror initialized successfully');
+    }
+
+    /**
+     * Initialize fallback textarea editor
+     */
+    initFallback(container) {
+        this.fallbackTextarea = container;
+        this.fallbackTextarea.style.display = 'block';
+
+        this.fallbackTextarea.addEventListener('input', () => {
+            if (this.onChange) {
+                this.onChange(this.getValue());
+            }
+        });
+
+        console.log('Using fallback textarea editor');
+    }
+
+    /**
+     * Get editor content
+     */
+    getValue() {
+        if (this.cm) {
+            return this.cm.getValue();
+        } else if (this.fallbackTextarea) {
+            return this.fallbackTextarea.value;
+        }
+        return '';
+    }
+
+    /**
+     * Set editor content
+     */
+    setValue(content) {
+        if (this.cm) {
+            this.cm.setValue(content || '');
+        } else if (this.fallbackTextarea) {
+            this.fallbackTextarea.value = content || '';
+        }
+    }
+
+    /**
+     * Insert markdown formatting
+     */
+    insertMarkdown(prefix, suffix, placeholder) {
+        if (this.cm) {
+            const doc = this.cm.getDoc();
+            const cursor = doc.getCursor();
+            const selection = doc.getSelection();
+
+            if (selection) {
+                doc.replaceSelection(prefix + selection + suffix);
+            } else {
+                const text = prefix + placeholder + suffix;
+                doc.replaceRange(text, cursor);
+                // Select the placeholder
+                doc.setSelection(
+                    { line: cursor.line, ch: cursor.ch + prefix.length },
+                    { line: cursor.line, ch: cursor.ch + prefix.length + placeholder.length }
+                );
             }
 
+            this.cm.focus();
+        } else if (this.fallbackTextarea) {
+            const start = this.fallbackTextarea.selectionStart;
+            const end = this.fallbackTextarea.selectionEnd;
+            const text = this.fallbackTextarea.value;
+            const selection = text.substring(start, end);
+
+            let newText = selection ? (prefix + selection + suffix) : (prefix + placeholder + suffix);
+            this.fallbackTextarea.value = text.substring(0, start) + newText + text.substring(end);
+
+            if (selection) {
+                this.fallbackTextarea.setSelectionRange(start + newText.length, start + newText.length);
+            } else {
+                this.fallbackTextarea.setSelectionRange(start + prefix.length, start + prefix.length + placeholder.length);
+            }
+
+            this.fallbackTextarea.focus();
+        }
+
+        if (this.onChange) {
+            this.onChange(this.getValue());
+        }
+    }
+
+    /**
+     * Set theme
+     */
+    setTheme(theme) {
+        if (this.cm) {
+            // Map app themes to CodeMirror themes
+            const cmThemes = {
+                'dark': 'material-darker',
+                'light': 'default',
+                'dracula': 'dracula',
+                'nord': 'nord',
+                'monokai': 'monokai'
+            };
+
+            const cmTheme = cmThemes[theme] || 'default';
+            this.cm.setOption('theme', cmTheme);
+        }
+    }
+
+    /**
+     * Set font size
+     */
+    setFontSize(size) {
+        if (this.cm) {
+            this.cm.getWrapperElement().style.fontSize = size;
+            this.cm.refresh();
+        } else if (this.fallbackTextarea) {
+            this.fallbackTextarea.style.fontSize = size;
+        }
+    }
+
+    /**
+     * Set font family
+     */
+    setFontFamily(family) {
+        if (this.cm) {
+            this.cm.getWrapperElement().style.fontFamily = family;
+            this.cm.refresh();
+        } else if (this.fallbackTextarea) {
+            this.fallbackTextarea.style.fontFamily = family;
+        }
+    }
+
+    /**
+     * Refresh editor
+     */
+    refresh() {
+        if (this.cm) {
+            this.cm.refresh();
+        }
+    }
+
+    /**
+     * Focus editor
+     */
+    focus() {
+        if (this.cm) {
+            this.cm.focus();
+        } else if (this.fallbackTextarea) {
+            this.fallbackTextarea.focus();
+        }
+    }
+
+    /**
+     * Get cursor position info
+     */
+    getCursorInfo() {
+        if (this.cm) {
+            const cursor = this.cm.getCursor();
+            const line = cursor.line + 1;
+            const ch = cursor.ch + 1;
+            return { line, column: ch };
+        }
+        return { line: 0, column: 0 };
+    }
+
+    /**
+     * Get text statistics
+     */
+    getStats() {
+        const content = this.getValue();
+        const lines = content.split('\n').length;
+        const words = content.trim() ? content.trim().split(/\s+/).length : 0;
+        const chars = content.length;
+
+        return { lines, words, chars };
+    }
+
+    /**
+     * Toggle fullscreen
+     */
+    toggleFullscreen() {
+        const panel = document.getElementById('editorPanel');
+        if (panel) {
+            panel.classList.toggle('fullscreen-mode');
+            if (this.cm) {
+                setTimeout(() => this.cm.refresh(), 100);
+            }
+        }
+    }
+}
+
+
+/**
+ * Preview Module - Handles markdown preview rendering
+ */
+class Preview {
+    constructor() {
+        this.container = null;
+        this.isFullscreen = false;
+    }
+
+    /**
+     * Initialize preview
+     */
+    init() {
+        this.container = document.getElementById('preview');
+        if (!this.container) {
+            console.error('Preview container not found');
+            return false;
+        }
+
+        // Initialize marked.js with extensions
+        if (window.marked) {
+            this.initMarked();
+        }
+
+        // Initialize mermaid
+        if (window.mermaid) {
+            window.mermaid.initialize({
+                startOnLoad: false,
+                theme: 'dark',
+                securityLevel: 'loose'
+            });
+        }
+
+        return true;
+    }
+
+    /**
+     * Initialize marked with extensions
+     */
+    initMarked() {
+        // Add GFM heading IDs
+        if (window.markedGfmHeadingId) {
+            marked.use(window.markedGfmHeadingId.gfmHeadingId());
+        }
+
+        // Add syntax highlighting
+        if (window.markedHighlight && window.hljs) {
+            marked.use(window.markedHighlight.markedHighlight({
+                langPrefix: 'language-',
+                highlight(code, lang) {
+                    const language = window.hljs.getLanguage(lang) ? lang : 'plaintext';
+                    return window.hljs.highlight(code, { language }).value;
+                }
+            }));
+        }
+    }
+
+    /**
+     * Update preview with markdown content
+     */
+    update(markdown) {
+        if (!this.container || !window.marked) return;
+
+        try {
+            // Parse markdown
+            let html = marked.parse(markdown || '');
+
+            // Process chart blocks
+            html = this.processCharts(html);
+
+            // Update container
+            this.container.innerHTML = html;
+
+            // Render mermaid diagrams
+            if (window.mermaid) {
+                window.mermaid.run({
+                    nodes: this.container.querySelectorAll('.language-mermaid, .language-chart')
+                });
+            }
+
+            // Render chart.js charts
+            this.renderCharts();
+
+        } catch (error) {
+            console.error('Preview render error:', error);
+            this.container.innerHTML = `<p style="color: red;">Error rendering preview: ${error.message}</p>`;
+        }
+    }
+
+    /**
+     * Process chart code blocks
+     */
+    processCharts(html) {
+        // This will be enhanced by the charts extension
+        return html;
+    }
+
+    /**
+     * Render Chart.js charts
+     */
+    renderCharts() {
+        if (!window.Chart) return;
+
+        const chartBlocks = this.container.querySelectorAll('pre code.language-chart');
+        chartBlocks.forEach((block, index) => {
+            try {
+                const config = JSON.parse(block.textContent);
+                const canvas = document.createElement('canvas');
+                canvas.id = `chart-${index}`;
+                canvas.width = 400;
+                canvas.height = 300;
+
+                // Replace code block with canvas
+                const pre = block.parentElement;
+                pre.parentElement.replaceChild(canvas, pre);
+
+                // Create chart
+                new Chart(canvas, config);
+            } catch (e) {
+                console.error('Chart render error:', e);
+            }
+        });
+    }
+
+    /**
+     * Toggle fullscreen mode
+     */
+    toggleFullscreen() {
+        const panel = document.getElementById('previewPanel');
+        if (panel) {
+            panel.classList.toggle('fullscreen-mode');
+            this.isFullscreen = !this.isFullscreen;
+
+            // Update button icon if needed
+            const icon = document.querySelector('#previewPanel .panel-header .icon-btn use');
+            if (icon) {
+                icon.setAttribute('href', this.isFullscreen ? '#icon-minimize' : '#icon-maximize');
+            }
+        }
+    }
+
+    /**
+     * Clear preview
+     */
+    clear() {
+        if (this.container) {
+            this.container.innerHTML = '';
+        }
+    }
+
+    /**
+     * Get preview HTML
+     */
+    getHTML() {
+        return this.container ? this.container.innerHTML : '';
+    }
+
+    /**
+     * Export preview to standalone HTML
+     */
+    exportHTML(markdown, theme) {
+        const html = marked.parse(markdown);
+        const themeColors = this.getThemeColors(theme);
+
+        return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Exported Document</title>
+    <style>
+        body {
+            font-family: 'Consolas', monospace;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: ${themeColors.bg};
+            color: ${themeColors.text};
+            line-height: 1.6;
+        }
+        h1, h2 { color: ${themeColors.accent}; border-bottom: 1px solid ${themeColors.border}; }
+        code { background: ${themeColors.codeBg}; padding: 2px 5px; border-radius: 3px; }
+        pre { background: ${themeColors.codeBg}; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        blockquote { border-left: 4px solid ${themeColors.border}; padding-left: 1em; color: ${themeColors.mutedText}; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid ${themeColors.border}; padding: 8px 12px; }
+        th { background: ${themeColors.codeBg}; font-weight: bold; }
+    </style>
+</head>
+<body>
+${html}
+</body>
+</html>`;
+    }
+
+    /**
+     * Get theme colors for export
+     */
+    getThemeColors(theme) {
+        const themes = {
+            dark: { bg: '#1e1e1e', text: '#d4d4d4', accent: '#007acc', border: '#3e3e42', codeBg: '#2d2d30', mutedText: '#808080' },
+            light: { bg: '#fff', text: '#000', accent: '#0066cc', border: '#ccc', codeBg: '#f0f0f0', mutedText: '#666' }
+        };
+
+        return themes[theme] || themes.dark;
+    }
+}
+
+
+/**
+ * Mindmap Module - Handles mindmap visualization
+ */
+class Mindmap {
+    constructor() {
+        this.container = null;
+        this.instance = null;
+        this.isFullscreen = false;
+    }
+
+    /**
+     * Initialize mindmap
+     */
+    async init() {
+        this.container = document.getElementById('mindmap');
+        if (!this.container) {
+            console.error('Mindmap container not found');
+            return false;
+        }
+
+        // Wait for markmap to load
+        try {
+            await this.waitForMarkmap();
+            console.log('Markmap ready');
+            return true;
+        } catch (error) {
+            console.error('Markmap initialization failed:', error);
+            this.container.innerHTML = '<div style="text-align:center;padding:50px;color:var(--text-secondary)">Markmap failed to load</div>';
+            return false;
+        }
+    }
+
+    /**
+     * Wait for markmap library to load
+     */
+    waitForMarkmap() {
+        return new Promise((resolve, reject) => {
+            const start = Date.now();
+            const check = setInterval(() => {
+                if (window.markmap && window.markmap.Markmap) {
+                    clearInterval(check);
+                    resolve();
+                }
+                if (Date.now() - start > 10000) {
+                    clearInterval(check);
+                    reject(new Error('Markmap load timeout'));
+                }
+            }, 100);
+        });
+    }
+
+    /**
+     * Render mindmap from markdown
+     */
+    render(markdown) {
+        if (!window.markmap || !this.container) return;
+
+        try {
+            // Destroy previous instance
+            if (this.instance) {
+                this.instance.destroy();
+            }
+
+            // Transform markdown to mindmap data
+            const transformer = new window.markmap.Transformer();
+            const { root } = transformer.transform(markdown || '# Empty');
+
+            // Clear container
+            this.container.innerHTML = '';
+
+            // Create SVG
+            const svg = window.d3.select('#mindmap')
+                .append('svg')
+                .attr('width', '100%')
+                .attr('height', '100%');
+
+            // Create and render mindmap
+            this.instance = window.markmap.Markmap.create(svg.node(), null, root);
+            this.instance.fit();
+
+        } catch (error) {
+            console.error('Mindmap render error:', error);
+            this.container.innerHTML = `<div style="text-align:center;padding:50px;color:var(--text-secondary)">Error: ${error.message}</div>`;
+        }
+    }
+
+    /**
+     * Fit mindmap to container
+     */
+    fit() {
+        if (this.instance) {
+            this.instance.fit();
+        }
+    }
+
+    /**
+     * Toggle fullscreen mode
+     */
+    toggleFullscreen() {
+        const panel = document.getElementById('mindmapPanel');
+        if (panel) {
+            panel.classList.toggle('fullscreen-mode');
+            this.isFullscreen = !this.isFullscreen;
+
+            // Refresh mindmap after fullscreen toggle
+            setTimeout(() => this.fit(), 100);
+        }
+    }
+
+    /**
+     * Clear mindmap
+     */
+    clear() {
+        if (this.instance) {
+            this.instance.destroy();
+            this.instance = null;
+        }
+        if (this.container) {
+            this.container.innerHTML = '';
+        }
+    }
+
+    /**
+     * Export mindmap to SVG
+     */
+    exportSVG() {
+        if (!this.container) return null;
+
+        const svg = this.container.querySelector('svg');
+        if (!svg) return null;
+
+        const serializer = new XMLSerializer();
+        return serializer.serializeToString(svg);
+    }
+
+    /**
+     * Export mindmap to PNG (via canvas)
+     */
+    async exportPNG() {
+        const svg = this.container.querySelector('svg');
+        if (!svg || !window.html2canvas) return null;
+
+        try {
+            const canvas = await html2canvas(svg);
+            return canvas.toDataURL('image/png');
+        } catch (error) {
+            console.error('Mindmap PNG export error:', error);
+            return null;
+        }
+    }
+}
+
+
+/**
+ * Presentation Module - Handles Reveal.js presentations
+ */
+class Presentation {
+    constructor() {
+        this.reveal = null;
+        this.isActive = false;
+        this.container = null;
+    }
+
+    /**
+     * Initialize presentation container
+     */
+    init() {
+        this.container = document.getElementById('preview');
+        return true;
+    }
+
+    /**
+     * Start presentation mode
+     */
+    async start(markdown) {
+        if (!markdown.includes('---')) {
+            alert('Use --- to separate slides');
+            return false;
+        }
+
+        try {
+            // Extract frontmatter if present
+            let content = markdown;
+            if (markdown.startsWith('---')) {
+                const parts = markdown.split('---');
+                if (parts.length >= 3) {
+                    content = parts.slice(2).join('---').trim();
+                }
+            }
+
+            // Create Reveal.js container
+            this.container.innerHTML = `
+                <div class="reveal">
+                    <div class="slides">
+                        <section data-markdown data-separator="^---$" data-separator-vertical="^--$">
+                            <textarea data-template>${content}</textarea>
+                        </section>
+                    </div>
+                </div>
+            `;
+
+            // Initialize Reveal.js
+            const config = {
+                embedded: true,
+                hash: false,
+                plugins: [window.RevealMarkdown],
+                width: 960,
+                height: 700,
+                margin: 0.04,
+                minScale: 0.2,
+                maxScale: 2.0,
+                // Auto-fit content
+                center: true,
+                transition: 'slide',
+                backgroundTransition: 'fade'
+            };
+
+            this.reveal = new window.Reveal(document.querySelector('.reveal'), config);
+            await this.reveal.initialize();
+
+            this.isActive = true;
+            return true;
+
+        } catch (error) {
+            console.error('Presentation start error:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Stop presentation mode
+     */
+    stop() {
+        if (this.reveal) {
+            this.reveal.destroy();
+            this.reveal = null;
+        }
+        this.isActive = false;
+        this.container.innerHTML = '';
+    }
+
+    /**
+     * Toggle presentation mode
+     */
+    async toggle(markdown) {
+        if (this.isActive) {
+            this.stop();
+            return false;
+        } else {
+            return await this.start(markdown);
+        }
+    }
+
+    /**
+     * Navigate to slide
+     */
+    slideTo(h, v = 0) {
+        if (this.reveal) {
+            this.reveal.slide(h, v);
+        }
+    }
+
+    /**
+     * Get total slides
+     */
+    getTotalSlides() {
+        return this.reveal ? this.reveal.getTotalSlides() : 0;
+    }
+
+    /**
+     * Get current slide index
+     */
+    getCurrentSlide() {
+        if (!this.reveal) return { h: 0, v: 0 };
+        const indices = this.reveal.getIndices();
+        return indices;
+    }
+
+    /**
+     * Export to PDF slides
+     */
+    async exportPDF(filename = 'slides.pdf') {
+        if (!this.reveal || !window.jspdf) {
+            console.error('Reveal or jsPDF not available');
+            return false;
+        }
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const totalSlides = this.getTotalSlides();
             const config = this.reveal.getConfig();
             const pdf = new jsPDF('l', 'px', [config.width, config.height]);
             const slidesContainer = document.querySelector('.reveal .slides');
 
             for (let i = 0; i < totalSlides; i++) {
-                this.showSpinner(`Generating PDF... (Slide ${i + 1} of ${totalSlides})`);
                 await this.reveal.slide(i, 0, 0);
-                await new Promise(r => setTimeout(r, 500)); 
+                await new Promise(r => setTimeout(r, 500));
 
-                const canvas = await html2canvas(slidesContainer, { 
-                    width: config.width, height: config.height, x: 0, y: 0
+                const canvas = await window.html2canvas(slidesContainer, {
+                    width: config.width,
+                    height: config.height,
+                    x: 0,
+                    y: 0,
+                    scale: 2 // Higher quality
                 });
 
-                if (i > 0) pdf.addPage([config.width, config.height], 'l');
-                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, config.width, config.height);
+                if (i > 0) {
+                    pdf.addPage([config.width, config.height], 'l');
+                }
+
+                pdf.addImage(
+                    canvas.toDataURL('image/png'),
+                    'PNG',
+                    0, 0,
+                    config.width,
+                    config.height
+                );
             }
 
-            pdf.save(this.currentFile.replace('.md', '') + '_slides.pdf');
-            if (!wasPresenting) this.destroyReveal();
+            pdf.save(filename);
+            return true;
 
-        } catch(e) {
-            console.error("PDF Slides Export Error:", e);
-            this.showStatus("Error exporting slides PDF", "error");
+        } catch (error) {
+            console.error('PDF export error:', error);
+            return false;
         }
-        this.hideSpinner();
-    },
-    
-    updatePreview() {
-        if (this.presentMode) return;
-        const previewEl = document.getElementById('preview');
-        previewEl.innerHTML = marked.parse(document.getElementById('editor').value);
+    }
+
+    /**
+     * Export to PowerPoint (via PptxGenJS)
+     */
+    async exportPPTX(filename = 'presentation.pptx') {
+        if (!this.reveal || !window.PptxGenJS) {
+            console.error('Reveal or PptxGenJS not available');
+            return false;
+        }
+
         try {
-            // Cerca nodi con class="language-mermaid" e li renderizza
-            mermaid.run({ nodes: previewEl.querySelectorAll('.language-mermaid') });
-        } catch(e) {
-            console.error("Mermaid render error:", e);
-        }
-    },
-    
-    updateStatus() {
-        const c = document.getElementById('editor').value;
-        document.getElementById('statusRight').textContent = `Lines: ${c.split('\n').length} | Chars: ${c.length}`;
-    },
-    
-    toggleView(v) {
-        this.views[v] = !this.views[v];
-        document.getElementById('editorPanel').classList.toggle('hidden', !this.views.editor);
-        document.getElementById('previewPanel').classList.toggle('hidden', !this.views.preview);
-        document.getElementById('mindmapPanel').classList.toggle('hidden', !this.views.mindmap);
-        
-        document.getElementById('btnEditor').classList.toggle('active', this.views.editor);
-        document.getElementById('btnPreview').classList.toggle('active', this.views.preview);
-        document.getElementById('btnMindmap').classList.toggle('active', this.views.mindmap);
-        
-        if (this.views.mindmap) setTimeout(() => this.refreshMindmap(), 100);
-        if (this.views.preview) this.updatePreview(); // Re-render mermaid
-    },
-    
-    toggleFileManager() {
-        document.getElementById('fileManager').classList.toggle('hidden');
-    },
-    
-    showSettings() {
-        // Populate settings modal with current values
-        document.getElementById('appNameInput').value = this.settings.appName;
-        document.getElementById('toolbarStyleSelect').value = this.settings.toolbarStyle;
-        document.getElementById('fontSelect').value = this.settings.font;
-        document.getElementById('sizeSelect').value = this.settings.size;
-        document.querySelectorAll('.theme-preset').forEach(el => 
-            el.classList.toggle('active', el.dataset.theme === this.settings.theme));
-        
-        document.getElementById('settingsModal').classList.add('show');
-    },
+            const pptx = new window.PptxGenJS();
+            const totalSlides = this.getTotalSlides();
+            const config = this.reveal.getConfig();
 
-    showHelp() {
-        document.getElementById('helpModal').classList.add('show');
-    },
-    
-    showPresentationSettings() {
-        document.getElementById('templateSelect').value = 'basic'; // Default to basic
-        document.getElementById('revealThemeSelect').value = this.settings.revealTheme;
-        document.getElementById('templatesModal').classList.add('show');
-    },
-    
-    applyTemplateAndSettings() {
-        const t = document.getElementById('templateSelect').value;
-        const newContent = this.templates[t];
-        if (newContent) {
-            document.getElementById('editor').value = newContent;
-        }
+            for (let i = 0; i < totalSlides; i++) {
+                await this.reveal.slide(i, 0, 0);
+                await new Promise(r => setTimeout(r, 500));
 
-        const theme = document.getElementById('revealThemeSelect').value;
-        this.setRevealTheme(theme, true); // Save and apply
-        
-        this.updatePreview();
-        this.save();
-        this.closeModal();
-    },
-    
-    closeModal() {
-        document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
-    },
+                const slidesContainer = document.querySelector('.reveal .slides section.present');
 
-    async initReveal(silent = false) { 
-        const c = document.getElementById('editor').value;
-        if (!silent) {
-            if (!c.includes('---')) {
-                alert('Use --- to separate slides');
-                return false;
+                // Convert slide to image
+                const canvas = await window.html2canvas(slidesContainer, {
+                    scale: 2
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+
+                // Add slide to PPTX
+                const slide = pptx.addSlide();
+                slide.addImage({
+                    data: imgData,
+                    x: 0,
+                    y: 0,
+                    w: '100%',
+                    h: '100%'
+                });
             }
-        }
-        
-        let md = c;
-        if (c.startsWith('---')) {
-            const parts = c.split('---');
-            if(parts.length >= 3) {
-                md = parts.slice(2).join('---').trim();
-            }
-        }
-        
-        document.getElementById('preview').innerHTML = `<div class="reveal"><div class="slides"><section data-markdown data-separator="^---$" data-separator-vertical="^--$"><textarea data-template>${md}</textarea></section></div></div>`;
-        
-        const config = {
-            embedded: true, hash: false, plugins:[RevealMarkdown]
-        };
-        if (silent) {
-            config.controls = false;
-        }
 
-        this.reveal = new Reveal(document.querySelector('.reveal'), config);
-        await this.reveal.initialize();
-        return true;
-    },
+            await pptx.writeFile({ fileName: filename });
+            return true;
 
-    destroyReveal() {
-        if (this.reveal) {
-            this.reveal.destroy();
-            this.reveal = null;
+        } catch (error) {
+            console.error('PPTX export error:', error);
+            return false;
         }
-        this.updatePreview();
-    },
-    
-    async togglePresentation() { 
-        this.presentMode = !this.presentMode;
-        document.getElementById('btnPresentation').classList.toggle('active', this.presentMode);
-        document.getElementById('previewTitle').textContent = this.presentMode ? 'PRESENTATION' : 'PREVIEW';
-        
-        if (this.presentMode) {
-            if (!await this.initReveal()) {
-                this.presentMode = false;
-                document.getElementById('btnPresentation').classList.remove('active');
-            }
-        } else {
-            this.destroyReveal();
+    }
+
+    /**
+     * Set theme
+     */
+    setTheme(theme) {
+        const themeLink = document.getElementById('revealTheme');
+        if (themeLink) {
+            themeLink.href = `https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/theme/${theme}.css`;
         }
-    },
-    
+    }
+
+    /**
+     * Toggle fullscreen
+     */
     toggleFullscreen() {
-        const p = document.getElementById('previewPanel');
-        p.classList.toggle('fullscreen');
-        if (p.classList.contains('fullscreen') && this.reveal) {
-            this.reveal.layout();
-        }
-    },
+        const panel = document.getElementById('previewPanel');
+        if (panel) {
+            panel.classList.toggle('fullscreen-mode');
 
-    insertMarkdown(prefix, suffix, placeholder) {
-        const editor = document.getElementById('editor');
-        const start = editor.selectionStart;
-        const end = editor.selectionEnd;
-        const text = editor.value;
-        const selection = text.substring(start, end);
-        
-        let newText = selection ? (prefix + selection + suffix) : (prefix + placeholder + suffix);
-        editor.value = text.substring(0, start) + newText + text.substring(end);
-        
-        if (selection) {
-            editor.setSelectionRange(start + newText.length, start + newText.length);
-        } else {
-            editor.setSelectionRange(start + prefix.length, start + prefix.length + placeholder.length);
+            if (this.reveal) {
+                setTimeout(() => this.reveal.layout(), 100);
+            }
         }
-        editor.focus();
-        this.updatePreview();
-        this.save();
-    },
-    
-    async initMindmap() {
+    }
+}
+
+
+/**
+ * Export Module - Handles file exports
+ */
+class ExportManager {
+    constructor(preview, presentation) {
+        this.preview = preview;
+        this.presentation = presentation;
+    }
+
+    /**
+     * Export file in specified format
+     */
+    async export(format, content, filename = 'document') {
+        switch (format) {
+            case 'md':
+                return this.exportMarkdown(content, filename);
+            case 'html':
+                return this.exportHTML(content, filename);
+            case 'pdf-preview':
+                return await this.exportPDFPreview(filename);
+            case 'pdf-slides':
+                return await this.exportPDFSlides(filename);
+            case 'pptx':
+                return await this.exportPPTX(filename);
+            default:
+                console.error('Unknown export format:', format);
+                return false;
+        }
+    }
+
+    /**
+     * Export as Markdown
+     */
+    exportMarkdown(content, filename) {
+        this.download(content, `${filename}.md`, 'text/markdown');
+        return true;
+    }
+
+    /**
+     * Export as HTML
+     */
+    exportHTML(content, filename) {
+        const html = this.preview.exportHTML(content, 'dark');
+        this.download(html, `${filename}.html`, 'text/html');
+        return true;
+    }
+
+    /**
+     * Export preview as PDF
+     */
+    async exportPDFPreview(filename) {
+        if (!window.html2canvas || !window.jspdf) {
+            alert('PDF export libraries not loaded');
+            return false;
+        }
+
         try {
-            await new Promise((resolve, reject) => {
-                const start = Date.now();
-                const check = setInterval(() => {
-                    if (window.markmap && window.markmap.Markmap) {
-                        clearInterval(check); resolve();
-                    }
-                    if (Date.now() - start > 10000) {
-                        clearInterval(check); reject(new Error("Markmap autoloader timeout"));
-                    }
-                }, 100);
+            const { jsPDF } = window.jspdf;
+            const previewEl = document.getElementById('preview');
+
+            // Create canvas from preview
+            const canvas = await window.html2canvas(previewEl, {
+                scale: 2,
+                useCORS: true,
+                logging: false
             });
-            this.refreshMindmap();
-        } catch(e) {
-            console.error("Failed to init Markmap:", e);
-            document.getElementById('mindmap').innerHTML = `<div style="text-align:center;padding:50px;color:var(--text-secondary)">Failed to load Mindmap.</div>`;
-        }
-    },
-    
-    refreshMindmap() {
-        if (!window.markmap || !this.views.mindmap) return;
-        try {
-            if (this.mm) this.mm.destroy();
-            const t = new window.markmap.Transformer();
-            const {root} = t.transform(document.getElementById('editor').value);
-            const c = document.getElementById('mindmap');
-            c.innerHTML = '';
-            const svg = d3.select('#mindmap').append('svg').attr('width','100%').attr('height','100%');
-            this.mm = window.markmap.Markmap.create(svg.node(), null, root);
-            this.mm.fit();
-        } catch(e) {
-            console.error("Mindmap refresh error:", e);
-        }
-    },
 
-    showStatus(message, type = "success") {
-        const statusEl = document.getElementById('statusLeft');
-        const oldText = statusEl.textContent;
-        const oldColor = statusEl.style.color;
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = 210; // A4 width in mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        statusEl.style.color = (type === "error") ? "#f44336" : "#4caf50";
-        statusEl.textContent = message;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            // Add first page
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= 297; // A4 height in mm
+
+            // Add additional pages if needed
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= 297;
+            }
+
+            pdf.save(`${filename}_preview.pdf`);
+            return true;
+
+        } catch (error) {
+            console.error('PDF preview export error:', error);
+            alert('Failed to export PDF preview');
+            return false;
+        }
+    }
+
+    /**
+     * Export presentation as PDF slides
+     */
+    async exportPDFSlides(filename) {
+        if (!this.presentation.isActive) {
+            alert('Please enter presentation mode first');
+            return false;
+        }
+
+        return await this.presentation.exportPDF(`${filename}_slides.pdf`);
+    }
+
+    /**
+     * Export presentation as PowerPoint
+     */
+    async exportPPTX(filename) {
+        if (!this.presentation.isActive) {
+            // Start presentation silently
+            const editor = window.app?.editor;
+            if (editor) {
+                const content = editor.getValue();
+                await this.presentation.start(content);
+            }
+        }
+
+        const result = await this.presentation.exportPPTX(`${filename}.pptx`);
+
+        // Stop presentation if we started it
+        if (this.presentation.isActive) {
+            this.presentation.stop();
+        }
+
+        return result;
+    }
+
+    /**
+     * Download helper
+     */
+    download(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    /**
+     * Show export menu
+     */
+    showMenu() {
+        const menu = document.getElementById('exportMenu');
+        if (menu) {
+            menu.classList.toggle('show');
+        }
+    }
+
+    /**
+     * Hide export menu
+     */
+    hideMenu() {
+        const menu = document.getElementById('exportMenu');
+        if (menu) {
+            menu.classList.remove('show');
+        }
+    }
+}
+
+
+/**
+ * Charts Extension - Adds Chart.js support to markdown
+ */
+class ChartsExtension {
+    constructor() {
+        this.charts = [];
+    }
+
+    /**
+     * Initialize charts extension
+     */
+    init() {
+        if (!window.Chart) {
+            console.warn('Chart.js not loaded');
+            return false;
+        }
+
+        console.log('Charts extension initialized');
+        return true;
+    }
+
+    /**
+     * Process markdown and render charts
+     */
+    process(container) {
+        if (!window.Chart || !container) return;
+
+        // Find chart code blocks
+        const chartBlocks = container.querySelectorAll('pre code.language-chart');
+
+        chartBlocks.forEach((block, index) => {
+            try {
+                const config = JSON.parse(block.textContent);
+
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                canvas.id = `chart-${Date.now()}-${index}`;
+                canvas.style.maxWidth = '100%';
+                canvas.style.height = 'auto';
+
+                // Replace code block with canvas
+                const pre = block.parentElement;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'chart-wrapper';
+                wrapper.style.padding = '20px';
+                wrapper.style.background = 'var(--bg-secondary)';
+                wrapper.style.borderRadius = '8px';
+                wrapper.style.margin = '1em 0';
+                wrapper.appendChild(canvas);
+
+                pre.parentElement.replaceChild(wrapper, pre);
+
+                // Create chart
+                const chart = new Chart(canvas, config);
+                this.charts.push(chart);
+
+            } catch (error) {
+                console.error('Chart render error:', error);
+                block.parentElement.innerHTML = `<p style="color: red;">Chart Error: ${error.message}</p>`;
+            }
+        });
+    }
+
+    /**
+     * Destroy all charts
+     */
+    destroy() {
+        this.charts.forEach(chart => chart.destroy());
+        this.charts = [];
+    }
+
+    /**
+     * Get example chart markdown
+     */
+    static getExample() {
+        return `### Bar Chart Example
+\`\`\`chart
+{
+  "type": "bar",
+  "data": {
+    "labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    "datasets": [{
+      "label": "Sales 2024",
+      "data": [12, 19, 15, 25, 22, 30],
+      "backgroundColor": "rgba(0, 122, 204, 0.6)",
+      "borderColor": "rgba(0, 122, 204, 1)",
+      "borderWidth": 1
+    }]
+  },
+  "options": {
+    "responsive": true,
+    "plugins": {
+      "legend": {
+        "display": true,
+        "position": "top"
+      }
+    },
+    "scales": {
+      "y": {
+        "beginAtZero": true
+      }
+    }
+  }
+}
+\`\`\`
+
+### Line Chart Example
+\`\`\`chart
+{
+  "type": "line",
+  "data": {
+    "labels": ["Week 1", "Week 2", "Week 3", "Week 4"],
+    "datasets": [{
+      "label": "Revenue",
+      "data": [65, 78, 90, 81],
+      "fill": false,
+      "borderColor": "rgb(75, 192, 192)",
+      "tension": 0.1
+    }]
+  },
+  "options": {
+    "responsive": true
+  }
+}
+\`\`\`
+
+### Pie Chart Example
+\`\`\`chart
+{
+  "type": "pie",
+  "data": {
+    "labels": ["Product A", "Product B", "Product C"],
+    "datasets": [{
+      "data": [300, 150, 100],
+      "backgroundColor": [
+        "rgba(255, 99, 132, 0.6)",
+        "rgba(54, 162, 235, 0.6)",
+        "rgba(255, 206, 86, 0.6)"
+      ]
+    }]
+  },
+  "options": {
+    "responsive": true
+  }
+}
+\`\`\``;
+    }
+}
+
+
+/**
+ * Timeline Extension - Adds timeline support via Mermaid Gantt
+ */
+class TimelineExtension {
+    constructor() {
+        this.initialized = false;
+    }
+
+    /**
+     * Initialize timeline extension
+     */
+    init() {
+        if (!window.mermaid) {
+            console.warn('Mermaid not loaded, timeline support disabled');
+            return false;
+        }
+
+        this.initialized = true;
+        console.log('Timeline extension initialized');
+        return true;
+    }
+
+    /**
+     * Get example timeline markdown
+     */
+    static getGanttExample() {
+        return `### Project Timeline (Gantt)
+\`\`\`mermaid
+gantt
+    title Project Development Timeline
+    dateFormat YYYY-MM-DD
+    section Planning
+    Requirements      :done,    req1, 2024-01-01, 2024-01-15
+    Design           :done,    des1, 2024-01-16, 2024-01-31
+    section Development
+    Frontend         :active,  dev1, 2024-02-01, 45d
+    Backend          :         dev2, 2024-02-15, 60d
+    section Testing
+    Unit Tests       :         test1, after dev1, 20d
+    Integration      :         test2, after dev2, 15d
+    section Deployment
+    Staging          :         dep1, after test2, 5d
+    Production       :         dep2, after dep1, 3d
+\`\`\``;
+    }
+
+    /**
+     * Get simple timeline example
+     */
+    static getTimelineExample() {
+        return `### Company History (Timeline)
+\`\`\`mermaid
+timeline
+    title History of Our Company
+    2010 : Founded in San Francisco
+         : First product launch
+    2012 : Series A funding
+         : Expanded to 50 employees
+    2015 : Reached 1M users
+         : Opened European office
+    2018 : IPO on NASDAQ
+         : 500+ employees globally
+    2020 : Acquired competitor
+         : Launched mobile app
+    2024 : 10M+ active users
+         : AI-powered features
+\`\`\``;
+    }
+
+    /**
+     * Get journey example
+     */
+    static getJourneyExample() {
+        return `### User Journey
+\`\`\`mermaid
+journey
+    title My Product Development Journey
+    section Discovery
+      Research: 5: Me, Team
+      Brainstorm: 4: Me, Team
+      Validate: 3: Me, Users
+    section Design
+      Wireframes: 4: Me, Designer
+      Mockups: 5: Designer
+      Prototype: 4: Designer, Dev
+    section Development
+      Code: 3: Dev Team
+      Review: 4: Me, Dev Team
+      Test: 2: QA Team
+    section Launch
+      Deploy: 5: DevOps
+      Monitor: 4: Me, Team
+      Celebrate: 5: Everyone
+\`\`\``;
+    }
+
+    /**
+     * Get all timeline examples
+     */
+    static getAllExamples() {
+        return `# Timeline & Gantt Chart Examples
+
+${this.getGanttExample()}
+
+${this.getTimelineExample()}
+
+${this.getJourneyExample()}
+
+## Gantt Chart Syntax
+
+### Date Formats
+- \`YYYY-MM-DD\` : 2024-01-15
+- \`YYYY-MM-DD HH:mm\` : 2024-01-15 14:30
+
+### Task Statuses
+- \`done\` : Completed task
+- \`active\` : Currently in progress
+- \`crit\` : Critical path
+- (blank) : Scheduled/future task
+
+### Duration
+- \`2024-01-01, 2024-01-31\` : Start and end date
+- \`2024-01-01, 30d\` : Start date and duration
+- \`after task1, 20d\` : After another task
+
+### Sections
+\`\`\`
+section Section Name
+    Task 1 :done, id1, 2024-01-01, 10d
+    Task 2 :active, id2, after id1, 15d
+\`\`\`
+
+## Tips
+
+1. Use sections to group related tasks
+2. Use task IDs to create dependencies
+3. Mark critical tasks with \`crit\`
+4. Use descriptive task names
+5. Keep timelines readable (not too many tasks)
+`;
+    }
+}
+
+
+/**
+ * MDNotes Pro - Main Application
+ * Professional Markdown Editor with Presentation & Visualization
+ */
+
+
+
+
+
+
+
+
+
+
+
+class MDNotesApp {
+    constructor() {
+        // Core modules
+        this.storage = Storage;
+        this.theme = Theme;
+        this.fileManager = null;
+        this.editor = null;
+        this.preview = null;
+        this.mindmap = null;
+        this.presentation = null;
+        this.exportManager = null;
+
+        // Extensions
+        this.chartsExt = null;
+        this.timelineExt = null;
+
+        // State
+        this.settings = {
+            theme: 'dark',
+            font: "'Consolas', monospace",
+            fontSize: '13px',
+            revealTheme: 'black',
+            appName: 'MDNotes Pro',
+            toolbarStyle: 'icon-only'
+        };
+
+        this.views = {
+            editor: true,
+            preview: false,
+            mindmap: false
+        };
+
+        // Presentation templates
+        this.templates = {
+            basic: `---\ntheme: black\n---\n\n# Presentation Title\n\n---\n\n## Slide 2\n\nYour content here...`,
+            principles: `---\ntheme: black\n---\n\n# 7 Key Principles\n\n---\n\n## Principle 1\n\nDescription...`,
+            timeline: TimelineExtension.getAllExamples(),
+            charts: ChartsExtension.getExample()
+        };
+    }
+
+    /**
+     * Initialize application
+     */
+    async init() {
+        console.log('Initializing MDNotes Pro...');
+
+        // Load settings
+        this.loadSettings();
+
+        // Apply theme
+        this.theme.apply(this.settings.theme);
+
+        // Initialize modules
+        this.fileManager = new FileManager(this.storage);
+        this.editor = new Editor();
+        this.preview = new Preview();
+        this.mindmap = new Mindmap();
+        this.presentation = new Presentation();
+
+        // Initialize file manager
+        this.fileManager.init();
+        this.fileManager.onFileChange = (file) => this.loadFile(file);
+
+        // Initialize editor
+        await this.editor.init();
+        this.editor.onChange = (content) => this.handleEditorChange(content);
+
+        // Initialize preview
+        this.preview.init();
+
+        // Initialize mindmap
+        await this.mindmap.init();
+
+        // Initialize presentation
+        this.presentation.init();
+
+        // Initialize export manager
+        this.exportManager = new ExportManager(this.preview, this.presentation);
+
+        // Initialize extensions
+        this.chartsExt = new ChartsExtension();
+        this.chartsExt.init();
+
+        this.timelineExt = new TimelineExtension();
+        this.timelineExt.init();
+
+        // Load current file
+        const currentFile = this.fileManager.getCurrentFile();
+        if (currentFile) {
+            this.loadFile(currentFile);
+        }
+
+        // Apply settings
+        this.applySettings();
+
+        // Setup event listeners
+        this.setupEventListeners();
+
+        console.log('MDNotes Pro initialized successfully!');
+    }
+
+    /**
+     * Load settings from storage
+     */
+    loadSettings() {
+        const saved = this.storage.loadSettings();
+        if (saved) {
+            this.settings = { ...this.settings, ...saved };
+        }
+    }
+
+    /**
+     * Save settings to storage
+     */
+    saveSettings() {
+        this.storage.saveSettings(this.settings);
+    }
+
+    /**
+     * Apply all settings
+     */
+    applySettings() {
+        // Apply theme
+        this.theme.apply(this.settings.theme);
+
+        // Apply font
+        document.documentElement.style.setProperty('--font-family', this.settings.font);
+        this.editor.setFontFamily(this.settings.font);
+
+        // Apply font size
+        document.documentElement.style.setProperty('--font-size', this.settings.fontSize);
+        this.editor.setFontSize(this.settings.fontSize);
+
+        // Apply app name
+        const titleSpan = document.querySelector('#appTitle span');
+        if (titleSpan) {
+            titleSpan.textContent = this.settings.appName;
+        }
+
+        // Apply toolbar style
+        document.body.setAttribute('data-toolbar-style', this.settings.toolbarStyle);
+
+        // Apply Reveal theme
+        this.presentation.setTheme(this.settings.revealTheme);
+
+        // Update settings UI
+        this.updateSettingsUI();
+    }
+
+    /**
+     * Update settings UI elements
+     */
+    updateSettingsUI() {
+        const appNameInput = document.getElementById('appNameInput');
+        if (appNameInput) appNameInput.value = this.settings.appName;
+
+        const toolbarStyleSelect = document.getElementById('toolbarStyleSelect');
+        if (toolbarStyleSelect) toolbarStyleSelect.value = this.settings.toolbarStyle;
+
+        const fontSelect = document.getElementById('fontSelect');
+        if (fontSelect) fontSelect.value = this.settings.font;
+
+        const sizeSelect = document.getElementById('sizeSelect');
+        if (sizeSelect) sizeSelect.value = this.settings.fontSize;
+
+        const revealThemeSelect = document.getElementById('revealThemeSelect');
+        if (revealThemeSelect) revealThemeSelect.value = this.settings.revealTheme;
+    }
+
+    /**
+     * Handle editor content change
+     */
+    handleEditorChange(content) {
+        // Auto-save
+        this.fileManager.saveCurrentFile(content);
+
+        // Update preview if visible
+        if (this.views.preview && !this.presentation.isActive) {
+            this.preview.update(content);
+            this.chartsExt.process(this.preview.container);
+        }
+
+        // Update mindmap if visible
+        if (this.views.mindmap) {
+            this.mindmap.render(content);
+        }
+
+        // Update status
+        this.updateStatus();
+    }
+
+    /**
+     * Load file into editor
+     */
+    loadFile(file) {
+        if (!file) return;
+
+        this.editor.setValue(file.content);
+        this.preview.update(file.content);
+
+        if (this.views.mindmap) {
+            this.mindmap.render(file.content);
+        }
+
+        this.updateStatus();
+    }
+
+    /**
+     * Toggle view visibility
+     */
+    toggleView(viewName) {
+        this.views[viewName] = !this.views[viewName];
+
+        // Update UI
+        const panels = {
+            editor: document.getElementById('editorPanel'),
+            preview: document.getElementById('previewPanel'),
+            mindmap: document.getElementById('mindmapPanel')
+        };
+
+        const buttons = {
+            editor: document.getElementById('btnEditor'),
+            preview: document.getElementById('btnPreview'),
+            mindmap: document.getElementById('btnMindmap')
+        };
+
+        Object.keys(this.views).forEach(key => {
+            if (panels[key]) {
+                panels[key].classList.toggle('hidden', !this.views[key]);
+            }
+            if (buttons[key]) {
+                buttons[key].classList.toggle('active', this.views[key]);
+            }
+        });
+
+        // Refresh view-specific content
+        if (viewName === 'mindmap' && this.views.mindmap) {
+            setTimeout(() => this.mindmap.render(this.editor.getValue()), 100);
+        }
+
+        if (viewName === 'preview' && this.views.preview) {
+            this.preview.update(this.editor.getValue());
+            this.chartsExt.process(this.preview.container);
+        }
+
+        // Refresh editor after layout change
+        if (this.editor) {
+            setTimeout(() => this.editor.refresh(), 100);
+        }
+    }
+
+    /**
+     * Toggle presentation mode
+     */
+    async togglePresentation() {
+        const content = this.editor.getValue();
+        const wasActive = this.presentation.isActive;
+
+        if (wasActive) {
+            this.presentation.stop();
+            this.preview.update(content);
+            this.chartsExt.process(this.preview.container);
+        } else {
+            const success = await this.presentation.start(content);
+            if (!success) {
+                return;
+            }
+        }
+
+        // Update button state
+        const btn = document.getElementById('btnPresentation');
+        if (btn) {
+            btn.classList.toggle('active', this.presentation.isActive);
+        }
+
+        // Update preview title
+        const title = document.getElementById('previewTitle');
+        if (title) {
+            title.textContent = this.presentation.isActive ? 'PRESENTATION' : 'PREVIEW';
+        }
+    }
+
+    /**
+     * Update status bar
+     */
+    updateStatus() {
+        const stats = this.editor.getStats();
+        const statusRight = document.getElementById('statusRight');
+        if (statusRight) {
+            statusRight.textContent = `Lines: ${stats.lines} | Words: ${stats.words} | Chars: ${stats.chars}`;
+        }
+
+        const cursorInfo = this.editor.getCursorInfo();
+        const statusLeft = document.getElementById('statusLeft');
+        if (statusLeft) {
+            statusLeft.textContent = `Ln ${cursorInfo.line}, Col ${cursorInfo.column}`;
+        }
+    }
+
+    /**
+     * Setup global event listeners
+     */
+    setupEventListeners() {
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Save: Ctrl/Cmd + S
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                this.save();
+            }
+
+            // New file: Ctrl/Cmd + N
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                this.showNewFileModal();
+            }
+
+            // Bold: Ctrl/Cmd + B (handled by editor)
+            // Italic: Ctrl/Cmd + I (handled by editor)
+        });
+
+        // Close dropdowns when clicking outside
+        document.body.addEventListener('click', (e) => {
+            if (!e.target.closest('.export-btn-group')) {
+                this.exportManager.hideMenu();
+            }
+        });
+    }
+
+    /**
+     * Save current file
+     */
+    save() {
+        const content = this.editor.getValue();
+        this.fileManager.saveCurrentFile(content);
+        this.showNotification('File saved!', 'success');
+    }
+
+    /**
+     * Show notification
+     */
+    showNotification(message, type = 'info') {
+        const statusLeft = document.getElementById('statusLeft');
+        if (!statusLeft) return;
+
+        const originalText = statusLeft.textContent;
+        const originalColor = statusLeft.style.color;
+
+        statusLeft.style.color = type === 'error' ? '#f44336' : '#4caf50';
+        statusLeft.textContent = message;
 
         setTimeout(() => {
-            statusEl.textContent = oldText;
-            statusEl.style.color = oldColor;
+            statusLeft.textContent = originalText;
+            statusLeft.style.color = originalColor;
         }, 3000);
-    },
+    }
 
-    showSpinner(text = "Loading...") {
-        document.getElementById('spinnerText').textContent = text;
-        document.getElementById('spinnerOverlay').style.display = 'flex';
-    },
+    /**
+     * Show/hide modals
+     */
+    showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('show');
+        }
+    }
+
+    closeModal() {
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.classList.remove('show');
+        });
+    }
+
+    /**
+     * Modal handlers
+     */
+    showNewFileModal() {
+        this.showModal('newFileModal');
+        const input = document.getElementById('newFileName');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    createFile() {
+        const input = document.getElementById('newFileName');
+        if (!input) return;
+
+        const filename = input.value.trim();
+        if (!filename) {
+            this.showNotification('Filename cannot be empty', 'error');
+            return;
+        }
+
+        try {
+            this.fileManager.createFile(filename);
+            this.closeModal();
+            this.showNotification(`File "${filename}" created`, 'success');
+        } catch (error) {
+            this.showNotification(error.message, 'error');
+        }
+    }
+
+    showSettings() {
+        this.updateSettingsUI();
+        this.showModal('settingsModal');
+    }
+
+    showHelp() {
+        this.showModal('helpModal');
+    }
+
+    showPresentationSettings() {
+        this.showModal('templatesModal');
+    }
+
+    applyTemplateAndSettings() {
+        const templateSelect = document.getElementById('templateSelect');
+        const revealThemeSelect = document.getElementById('revealThemeSelect');
+
+        if (templateSelect) {
+            const template = this.templates[templateSelect.value];
+            if (template) {
+                this.editor.setValue(template);
+            }
+        }
+
+        if (revealThemeSelect) {
+            this.settings.revealTheme = revealThemeSelect.value;
+            this.presentation.setTheme(this.settings.revealTheme);
+            this.saveSettings();
+        }
+
+        this.closeModal();
+    }
+
+    /**
+     * Settings handlers
+     */
+    setAppName(name) {
+        this.settings.appName = name || 'MDNotes Pro';
+        this.applySettings();
+        this.saveSettings();
+    }
+
+    setToolbarStyle(style) {
+        this.settings.toolbarStyle = style;
+        this.applySettings();
+        this.saveSettings();
+    }
+
+    setTheme(themeName) {
+        this.settings.theme = themeName;
+        this.theme.apply(themeName);
+        this.editor.setTheme(themeName);
+        this.saveSettings();
+
+        // Re-render preview for mermaid theme sync
+        if (this.views.preview && !this.presentation.isActive) {
+            this.preview.update(this.editor.getValue());
+            this.chartsExt.process(this.preview.container);
+        }
+    }
+
+    setFont(font) {
+        this.settings.font = font;
+        this.applySettings();
+        this.saveSettings();
+    }
+
+    setFontSize(size) {
+        this.settings.fontSize = size;
+        this.applySettings();
+        this.saveSettings();
+    }
+
+    /**
+     * File operations
+     */
+    loadExternalFiles(event) {
+        this.fileManager.loadExternalFiles(event.target.files);
+    }
+
+    toggleFileManager() {
+        this.fileManager.toggleVisibility();
+    }
+
+    /**
+     * Export operations
+     */
+    async exportAs(format) {
+        const filename = this.fileManager.currentFile?.replace('.md', '') || 'document';
+        const content = this.editor.getValue();
+
+        this.exportManager.hideMenu();
+        this.showSpinner('Exporting...');
+
+        try {
+            await this.exportManager.export(format, content, filename);
+            this.showNotification('Export successful!', 'success');
+        } catch (error) {
+            console.error('Export error:', error);
+            this.showNotification('Export failed', 'error');
+        } finally {
+            this.hideSpinner();
+        }
+    }
+
+    toggleExportMenu() {
+        this.exportManager.showMenu();
+    }
+
+    /**
+     * Markdown toolbar actions
+     */
+    insertMarkdown(prefix, suffix, placeholder) {
+        this.editor.insertMarkdown(prefix, suffix, placeholder);
+    }
+
+    /**
+     * Fullscreen toggles
+     */
+    toggleEditorFullscreen() {
+        this.editor.toggleFullscreen();
+    }
+
+    togglePreviewFullscreen() {
+        this.preview.toggleFullscreen();
+    }
+
+    toggleMindmapFullscreen() {
+        this.mindmap.toggleFullscreen();
+    }
+
+    /**
+     * Spinner helpers
+     */
+    showSpinner(text = 'Loading...') {
+        const spinner = document.getElementById('spinnerOverlay');
+        const spinnerText = document.getElementById('spinnerText');
+        if (spinner) spinner.style.display = 'flex';
+        if (spinnerText) spinnerText.textContent = text;
+    }
 
     hideSpinner() {
-        document.getElementById('spinnerOverlay').style.display = 'none';
+        const spinner = document.getElementById('spinnerOverlay');
+        if (spinner) spinner.style.display = 'none';
     }
-};
+}
 
-window.addEventListener('DOMContentLoaded', () => app.init());
-document.addEventListener('keydown', e => {
-    if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); app.save(); }
-    if ((e.ctrlKey||e.metaKey) && e.key==='n') { e.preventDefault(); app.newFile(); }
+// Initialize app when DOM is ready
+window.addEventListener('DOMContentLoaded', async () => {
+    window.app = new MDNotesApp();
+    await window.app.init();
 });
+
+MDNotesApp;
+
+
+
     </script>
-
-    <!-- SVG Icon Sprite Sheet (Minimal Monochrome) -->
-    <svg width="0" height="0" style="position:absolute; display:none;">
-        <defs>
-            <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></symbol>
-            <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></symbol>
-            <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></symbol>
-            <symbol id="icon-git-branch" viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></symbol>
-            <symbol id="icon-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></symbol>
-            <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></symbol>
-            <symbol id="icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></symbol>
-            <symbol id="icon-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></symbol>
-            <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></symbol>
-            <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></symbol>
-            <symbol id="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></symbol>
-            <symbol id="icon-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></symbol>
-            <symbol id="icon-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></symbol>
-            <symbol id="icon-bold" viewBox="0 0 24 24"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path></symbol>
-            <symbol id="icon-italic" viewBox="0 0 24 24"><line x1="19" y1="4" x2="10" y2="4"></line><line x1="14" y1="20" x2="5" y2="20"></line><line x1="15" y1="4" x2="9" y2="20"></line></symbol>
-            <symbol id="icon-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></symbol>
-            <symbol id="icon-quote" viewBox="0 0 24 24"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v8c0 1.25.75 2 2 2h2"></path><path d="M14 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v8c0 1.25.75 2 2 2h2"></path></symbol>
-            <symbol id="icon-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></symbol>
-            <symbol id="icon-ol" viewBox="0 0 24 24"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4"></path><path d="M4 10h2"></path><path d="M6 18H4v-4h2v-1h-2"></path></symbol>
-            <symbol id="icon-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></symbol>
-            <symbol id="icon-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
-            <symbol id="icon-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></symbol>
-            <symbol id="icon-code-block" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></symbol>
-            <symbol id="icon-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></symbol>
-            <symbol id="icon-file" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></symbol>
-        </defs>
-    </svg>
-
 </body>
 </html>
