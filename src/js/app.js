@@ -13,6 +13,9 @@ import { Presentation } from './modules/presentation.js';
 import { ExportManager } from './modules/export.js';
 import { ChartsExtension } from './extensions/charts.js';
 import { TimelineExtension } from './extensions/timeline.js';
+import { SyncManager } from './modules/sync.js';
+import { PresentationTemplates } from './modules/presentation-templates.js';
+import { AdvancedExport } from './modules/export-advanced.js';
 
 class MDNotesApp {
     constructor() {
@@ -29,6 +32,11 @@ class MDNotesApp {
         // Extensions
         this.chartsExt = null;
         this.timelineExt = null;
+
+        // Advanced features
+        this.syncManager = null;
+        this.presentationTemplates = null;
+        this.advancedExport = null;
 
         // State
         this.settings = {
@@ -100,6 +108,14 @@ class MDNotesApp {
 
         this.timelineExt = new TimelineExtension();
         this.timelineExt.init();
+
+        // Initialize advanced features
+        this.syncManager = new SyncManager(this.editor, this.preview, this.mindmap);
+        this.syncManager.init();
+
+        this.presentationTemplates = new PresentationTemplates();
+
+        this.advancedExport = new AdvancedExport();
 
         // Load current file
         const currentFile = this.fileManager.getCurrentFile();
@@ -563,6 +579,99 @@ class MDNotesApp {
     hideSpinner() {
         const spinner = document.getElementById('spinnerOverlay');
         if (spinner) spinner.style.display = 'none';
+    }
+
+    /**
+     * Advanced Export Methods
+     */
+    async exportAdvancedPDF() {
+        const filename = this.fileManager.currentFile?.replace('.md', '') || 'document';
+        const content = this.editor.getValue();
+
+        this.showSpinner('Generating PDF...');
+        try {
+            await this.advancedExport.exportToPDF(content, `${filename}.pdf`);
+            this.showNotification('PDF exported successfully!', 'success');
+        } catch (error) {
+            console.error('PDF export error:', error);
+            this.showNotification('PDF export failed: ' + error.message, 'error');
+        } finally {
+            this.hideSpinner();
+        }
+    }
+
+    async exportAdvancedDOCX() {
+        const filename = this.fileManager.currentFile?.replace('.md', '') || 'document';
+        const content = this.editor.getValue();
+
+        this.showSpinner('Generating DOCX...');
+        try {
+            await this.advancedExport.exportToDOCX(content, `${filename}.docx`);
+            this.showNotification('DOCX exported successfully!', 'success');
+        } catch (error) {
+            console.error('DOCX export error:', error);
+            this.showNotification('DOCX export failed: ' + error.message, 'error');
+        } finally {
+            this.hideSpinner();
+        }
+    }
+
+    async exportAdvancedPPTX(templateName = 'corporate') {
+        const filename = this.fileManager.currentFile?.replace('.md', '') || 'presentation';
+        const content = this.editor.getValue();
+        const template = this.presentationTemplates.getTemplate(templateName);
+
+        this.showSpinner('Generating PowerPoint...');
+        try {
+            await this.advancedExport.exportToPPTX(content, `${filename}.pptx`, template);
+            this.showNotification('PowerPoint exported successfully!', 'success');
+        } catch (error) {
+            console.error('PPTX export error:', error);
+            this.showNotification('PPTX export failed: ' + error.message, 'error');
+        } finally {
+            this.hideSpinner();
+        }
+    }
+
+    /**
+     * Presentation Template Methods
+     */
+    applyPresentationTemplate(templateName) {
+        if (this.presentation.reveal) {
+            this.presentationTemplates.applyTemplate(templateName, this.presentation.reveal);
+            this.showNotification(`Template "${templateName}" applied`, 'success');
+        }
+    }
+
+    exportPresentationTemplate(templateName) {
+        this.presentationTemplates.exportTemplate(templateName);
+    }
+
+    importPresentationTemplate(jsonString, name) {
+        if (this.presentationTemplates.importTemplate(jsonString, name)) {
+            this.showNotification(`Template "${name}" imported`, 'success');
+        } else {
+            this.showNotification('Failed to import template', 'error');
+        }
+    }
+
+    /**
+     * Sync Manager Methods
+     */
+    toggleSync() {
+        if (this.syncManager) {
+            const newState = !this.syncManager.enabled;
+            this.syncManager.setEnabled(newState);
+            this.showNotification(`Sync ${newState ? 'enabled' : 'disabled'}`, 'success');
+            return newState;
+        }
+        return false;
+    }
+
+    scrollToHeading(headingText) {
+        if (this.syncManager) {
+            this.syncManager.scrollToHeading(headingText);
+        }
     }
 }
 

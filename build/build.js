@@ -48,7 +48,10 @@ const jsModules = [
     'modules/preview.js',
     'modules/mindmap.js',
     'modules/presentation.js',
+    'modules/presentation-templates.js',
     'modules/export.js',
+    'modules/export-advanced.js',
+    'modules/sync.js',
     'extensions/charts.js',
     'extensions/timeline.js',
     'app.js'

@@ -418,3 +418,16 @@ select {
 #fileInput {
     display: none;
 }
+
+/* Sync Highlighting */
+.sync-highlight {
+    background: rgba(0, 122, 204, 0.1);
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+    margin-left: -15px;
+    transition: all 0.3s ease;
+}
+
+.sync-highlight:hover {
+    background: rgba(0, 122, 204, 0.15);
+}
