@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDNotes Pro - Professional Markdown Editor</title>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/theme/black.css" id="revealTheme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+
+    <style id="appStyles">
+        /* BUILD_CSS_PLACEHOLDER */
+    </style>
+</head>
+<body data-toolbar-style="icon-only">
+
+    <!-- Header -->
+    <div class="header">
+        <h1 id="appTitle">
+            <svg class="icon" style="width:20px; height:20px" viewBox="0 0 24 24"><use href="#icon-edit"></use></svg>
+            <span>MDNotes Pro</span>
+        </h1>
+        <div class="btn-group">
+            <button class="btn" onclick="app.showNewFileModal()">+ New</button>
+            <button class="btn" onclick="document.getElementById('fileInput').click()">📁 Open</button>
+            <button class="icon-btn" onclick="app.showSettings()" title="Settings">
+                <svg class="icon"><use href="#icon-settings"></use></svg>
+            </button>
+            <button class="icon-btn" onclick="app.showHelp()" title="Help">
+                <svg class="icon"><use href="#icon-help"></use></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="app.toggleFileManager()" title="Toggle File Manager">
+            <svg class="icon"><use href="#icon-folder"></use></svg>
+            <span>Files</span>
+        </button>
+        <div class="separator"></div>
+        <div class="btn-group">
+            <button class="toolbar-btn active" id="btnEditor" onclick="app.toggleView('editor')" title="Editor">
+                <svg class="icon"><use href="#icon-edit"></use></svg>
+                <span>Editor</span>
+            </button>
+            <button class="toolbar-btn" id="btnPreview" onclick="app.toggleView('preview')" title="Preview">
+                <svg class="icon"><use href="#icon-eye"></use></svg>
+                <span>Preview</span>
+            </button>
+            <button class="toolbar-btn" id="btnMindmap" onclick="app.toggleView('mindmap')" title="Mindmap">
+                <svg class="icon"><use href="#icon-git-branch"></use></svg>
+                <span>Mindmap</span>
+            </button>
+        </div>
+        <div class="separator"></div>
+        <button class="toolbar-btn" onclick="app.save()" title="Save (Ctrl+S)">
+            <svg class="icon"><use href="#icon-save"></use></svg>
+            <span>Save</span>
+        </button>
+        <div class="export-btn-group">
+            <button class="toolbar-btn" onclick="app.toggleExportMenu()" title="Export">
+                <svg class="icon"><use href="#icon-download"></use></svg>
+                <span>Export</span>
+            </button>
+            <div class="dropdown-menu" id="exportMenu">
+                <div class="dropdown-item" onclick="app.exportAs('md')">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-file-text"></use></svg>
+                    <span>as Markdown (.md)</span>
+                </div>
+                <div class="dropdown-item" onclick="app.exportAs('html')">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-code"></use></svg>
+                    <span>as HTML (.html)</span>
+                </div>
+                <div class="dropdown-item" onclick="app.exportAs('pdf-preview')">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-file"></use></svg>
+                    <span>as PDF (Preview)</span>
+                </div>
+                <div class="dropdown-item" onclick="app.exportAs('pdf-slides')">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-image"></use></svg>
+                    <span>as PDF (Slides)</span>
+                </div>
+                <div class="dropdown-item" onclick="app.exportAs('pptx')">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-presentation"></use></svg>
+                    <span>as PowerPoint (.pptx)</span>
+                </div>
+            </div>
+        </div>
+        <div class="separator"></div>
+        <button class="toolbar-btn" id="btnPresentation" onclick="app.togglePresentation()" title="Present">
+            <svg class="icon"><use href="#icon-play"></use></svg>
+            <span>Present</span>
+        </button>
+        <button class="toolbar-btn" onclick="app.showPresentationSettings()" title="Presentation Settings">
+            <svg class="icon"><use href="#icon-sliders"></use></svg>
+            <span>Templates</span>
+        </button>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- File Manager -->
+        <div class="file-manager" id="fileManager">
+            <div class="file-manager-header">FILES</div>
+            <div class="file-list" id="fileList"></div>
+        </div>
+
+        <!-- Editor Panel -->
+        <div class="editor-panel" id="editorPanel">
+            <div class="panel-header">
+                <span>EDITOR</span>
+                <button class="icon-btn" onclick="app.toggleEditorFullscreen()" title="Fullscreen">
+                    <svg class="icon"><use href="#icon-maximize"></use></svg>
+                </button>
+            </div>
+            <div id="mdToolbar">
+                <button class="btn" onclick="app.insertMarkdown('**', '**', 'bold')" title="Bold (Ctrl+B)">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-bold"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('*', '*', 'italic')" title="Italic (Ctrl+I)">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-italic"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('`', '`', 'code')" title="Inline Code">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-code"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('\n> ', '', 'Quote')" title="Blockquote">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-quote"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('\n- ', '', 'List item')" title="Unordered List">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-list"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('\n1. ', '', 'List item')" title="Ordered List">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-ol"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('\n- [ ] ', '', 'Task')" title="Task List">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-check-square"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('[', '](url)', 'link text')" title="Link (Ctrl+K)">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-link"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('![', '](url)', 'alt text')" title="Image">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-image"></use></svg>
+                </button>
+                <button class="btn" onclick="app.insertMarkdown('\n```\n', '\n```\n', 'code')" title="Code Block">
+                    <svg class="icon" style="width:14px; height:14px"><use href="#icon-code-block"></use></svg>
+                </button>
+            </div>
+            <textarea id="editor" spellcheck="false"></textarea>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel hidden" id="previewPanel">
+            <div class="panel-header">
+                <span id="previewTitle">PREVIEW</span>
+                <button class="icon-btn" onclick="app.togglePreviewFullscreen()" title="Fullscreen">
+                    <svg class="icon"><use href="#icon-maximize"></use></svg>
+                </button>
+            </div>
+            <div id="preview"></div>
+        </div>
+
+        <!-- Mindmap Panel -->
+        <div class="mindmap-panel hidden" id="mindmapPanel">
+            <div class="panel-header">
+                <span>MINDMAP</span>
+                <button class="icon-btn" onclick="app.toggleMindmapFullscreen()" title="Fullscreen">
+                    <svg class="icon"><use href="#icon-maximize"></use></svg>
+                </button>
+            </div>
+            <div id="mindmap">
+                <div style="text-align:center;padding:50px;color:var(--text-secondary)">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span id="statusLeft">Ready</span>
+        <span id="statusRight">Lines: 0 | Words: 0 | Chars: 0</span>
+    </div>
+
+    <!-- File Input -->
+    <input type="file" id="fileInput" accept=".md,.txt" multiple onchange="app.loadExternalFiles(event)">
+
+    <!-- BUILD_MODALS_PLACEHOLDER -->
+
+    <!-- Loading Spinner -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div class="spinner"></div>
+        <span id="spinnerText">Loading...</span>
+    </div>
+
+    <!-- BUILD_ICONS_PLACEHOLDER -->
+
+    <!-- External JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/markdown/markdown.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-gfm-heading-id/lib/index.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-highlight/lib/index.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/match-highlighter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/scroll/annotatescrollbar.min.js"></script>
+
+    <!-- Application JavaScript (ES6 Modules) -->
+    <script type="module">
+        /* BUILD_JS_PLACEHOLDER */
+    </script>
+</body>
+</html>

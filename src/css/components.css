@@ -1,0 +1,420 @@
+/* Component Styles */
+
+/* Header */
+.header {
+    background: var(--bg-secondary);
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header .btn-group {
+    display: flex;
+    gap: 5px;
+}
+
+/* Toolbar */
+.toolbar {
+    background: var(--bg-tertiary);
+    padding: 8px 15px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.separator {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 5px;
+}
+
+/* Buttons */
+.btn, .toolbar-btn, .icon-btn {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn:hover, .toolbar-btn:hover, .icon-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+.btn.active, .toolbar-btn.active {
+    background: var(--accent);
+    color: white;
+}
+
+.icon-btn {
+    padding: 6px;
+    min-width: 30px;
+}
+
+.toolbar-btn {
+    padding: 5px 8px;
+}
+
+/* Icons */
+.icon {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+/* Toolbar Style Variants */
+body[data-toolbar-style="icon-only"] .toolbar-btn span {
+    display: none;
+}
+
+body[data-toolbar-style="text-only"] .toolbar-btn .icon {
+    display: none;
+}
+
+body[data-toolbar-style="icon-text"] .toolbar-btn {
+    padding: 5px 10px;
+}
+
+/* Dropdown Menu */
+.export-btn-group {
+    position: relative;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-width: 180px;
+    z-index: 100;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    margin-top: 5px;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    padding: 8px 15px;
+    font-size: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-item:hover {
+    background-color: var(--accent);
+}
+
+/* Main Container */
+.main-container {
+    display: flex;
+    height: calc(100vh - 90px);
+}
+
+/* File Manager */
+.file-manager {
+    width: 200px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+.file-manager.hidden {
+    display: none;
+}
+
+.file-manager-header {
+    padding: 8px 10px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.file-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.file-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.file-item.active {
+    background: var(--accent);
+    color: white;
+}
+
+.file-item .delete-btn {
+    opacity: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.file-item:hover .delete-btn {
+    opacity: 1;
+}
+
+.file-item .delete-btn .icon:hover {
+    color: #f44336;
+}
+
+/* Panels */
+.editor-panel, .preview-panel, .mindmap-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    min-width: 0;
+}
+
+.editor-panel.hidden, .preview-panel.hidden, .mindmap-panel.hidden {
+    display: none;
+}
+
+.panel-header {
+    background: var(--bg-tertiary);
+    padding: 5px 10px;
+    font-size: 11px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header .icon-btn {
+    padding: 2px;
+}
+
+/* Editor */
+#mdToolbar {
+    background: var(--bg-secondary);
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+#mdToolbar .btn {
+    font-size: 14px;
+    font-weight: bold;
+    padding: 4px 8px;
+    min-width: 28px;
+    text-align: center;
+}
+
+/* CodeMirror Override Styles */
+.CodeMirror {
+    height: 100% !important;
+    font-family: var(--font-family) !important;
+    font-size: var(--font-size) !important;
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.CodeMirror-gutters {
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border) !important;
+}
+
+.CodeMirror-linenumber {
+    color: var(--text-secondary) !important;
+}
+
+.CodeMirror-cursor {
+    border-left: 2px solid var(--accent) !important;
+}
+
+.CodeMirror-selected {
+    background: rgba(0, 122, 204, 0.2) !important;
+}
+
+/* Fallback Editor (Textarea) */
+#editor {
+    flex: 1;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: none;
+    padding: 15px;
+    font-family: inherit;
+    font-size: var(--font-size);
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+}
+
+/* Preview */
+#preview {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: var(--bg-primary);
+    font-size: var(--font-size);
+}
+
+/* Preview Markdown Styles */
+#preview h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: .3em;
+}
+
+#preview h2 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: .3em;
+}
+
+#preview h3 {
+    font-size: 1.17em;
+    margin: 1em 0;
+}
+
+#preview p {
+    margin: 1em 0;
+    line-height: 1.7;
+}
+
+#preview code:not(pre code) {
+    background: var(--bg-tertiary);
+    padding: .2em .4em;
+    font-size: 85%;
+    border-radius: 6px;
+}
+
+#preview pre {
+    background: var(--bg-tertiary);
+    padding: 16px;
+    overflow-x: auto;
+    border-radius: 6px;
+}
+
+#preview pre code {
+    padding: 0;
+    background: none;
+}
+
+#preview blockquote {
+    border-left: .25em solid var(--border);
+    padding: 0 1em;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+#preview ul, #preview ol {
+    padding-left: 2em;
+    margin: 1em 0;
+}
+
+#preview table {
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+#preview th, #preview td {
+    border: 1px solid var(--border);
+    padding: 6px 13px;
+}
+
+#preview th {
+    font-weight: bold;
+    background-color: var(--bg-tertiary);
+}
+
+#preview tr:nth-child(2n) {
+    background-color: var(--bg-secondary);
+}
+
+/* Mindmap */
+#mindmap {
+    flex: 1;
+    background: var(--bg-primary);
+}
+
+#mindmap svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Status Bar */
+.status-bar {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 4px 20px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Form Elements */
+select, .btn-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+select {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 6px;
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 4px;
+}
+
+#fileInput {
+    display: none;
+}

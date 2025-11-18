@@ -1,0 +1,24 @@
+{
+  "name": "mdnotes",
+  "version": "2.0.0",
+  "description": "Professional modular Markdown editor with presentation, mindmap, and diagram support",
+  "main": "dist/index.html",
+  "scripts": {
+    "build": "node build/build.js",
+    "dev": "node build/build.js && python3 -m http.server 8000",
+    "watch": "node build/watch.js"
+  },
+  "keywords": [
+    "markdown",
+    "editor",
+    "presentation",
+    "mindmap",
+    "diagrams",
+    "reveal.js",
+    "codemirror"
+  ],
+  "author": "MDNotes Team",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}
