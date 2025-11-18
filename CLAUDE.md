@@ -1,535 +1,636 @@
-# CLAUDE.md - AI Assistant Guide for mdnotes
+# CLAUDE.md - AI Assistant Guide for MDNotes Pro
 
 ## Project Overview
 
-**mdnotes** is a single-file, browser-based Markdown editor with advanced presentation and visualization capabilities. It combines:
+**MDNotes Pro** (v2.0.0) is a professional, modular, browser-based Markdown editor with advanced presentation and visualization capabilities. It combines:
 
-- **Markdown Editor** with live preview
+- **CodeMirror Editor** with syntax highlighting and shortcuts
+- **Live Preview** with Mermaid diagrams and Chart.js
 - **Presentation Mode** powered by Reveal.js
 - **Mindmap Visualization** using markmap
-- **PDF Export** for both preview and slides
-- **Mermaid Diagram Support**
-- **Multi-file Management** with localStorage persistence
+- **Advanced Export** (MD, HTML, PDF, PowerPoint)
+- **Multi-file Management** with localStorage
+- **Fullscreen Modes** for all panels
+- **Timeline & Gantt** chart support
+- **5 Themes** (dark, light, dracula, nord, monokai)
 
-The entire application is contained in a single `index.html` file (59,889 bytes) with no external dependencies required at runtime - all libraries are loaded via CDN.
+The application uses a **modular architecture** with source files in `src/` that are bundled into a single `dist/index.html` file (~100KB) via Node.js build script.
 
-## Codebase Structure
+## Architecture Overview
 
-### Single-File Architecture
+### New Modular Structure (v2.0.0)
 
 ```
-/home/user/mdnotes/
-├── .git/                 # Git repository
-└── index.html           # Complete application (HTML + CSS + JS)
+mdnotes/
+├── src/                    # Source files (EDIT THESE)
+│   ├── css/               # Stylesheets
+│   │   ├── variables.css  # CSS variables & themes
+│   │   ├── base.css       # Base styles & reset
+│   │   ├── components.css # UI components
+│   │   └── modals.css     # Modal dialogs
+│   ├── js/                # JavaScript modules
+│   │   ├── modules/       # Core functionality
+│   │   │   ├── storage.js        # localStorage operations
+│   │   │   ├── theme.js          # Theme management
+│   │   │   ├── file-manager.js   # File operations
+│   │   │   ├── editor.js         # CodeMirror editor
+│   │   │   ├── preview.js        # Markdown preview
+│   │   │   ├── mindmap.js        # Mindmap visualization
+│   │   │   ├── presentation.js   # Reveal.js integration
+│   │   │   └── export.js         # Export functionality
+│   │   ├── extensions/    # Optional features
+│   │   │   ├── charts.js        # Chart.js integration
+│   │   │   └── timeline.js      # Timeline support
+│   │   └── app.js         # Main application class
+│   └── html/              # HTML components
+│       ├── template.html  # Main HTML template
+│       ├── modals.html    # Modal HTML
+│       └── icons.html     # SVG icon sprites
+├── build/                 # Build system
+│   ├── build.js          # Production build script
+│   └── watch.js          # Development watcher
+├── dist/                  # Built files (OUTPUT)
+│   └── index.html        # Single-file application
+├── index.html            # Original v1.x file (deprecated)
+├── package.json          # Project configuration
+├── README.md             # User documentation
+├── TODO.md               # Task list
+└── CLAUDE.md             # This file
 ```
 
-### index.html Sections
+### Build System
 
-The file is organized into distinct sections:
+The project uses a Node.js build script that:
 
-1. **Lines 1-15**: HTML Head & External CSS Links
-2. **Lines 16-352**: Embedded CSS (`<style>` tag)
-   - CSS Variables for theming (`:root`)
-   - Component styles (header, toolbar, panels, etc.)
-   - Modal dialogs
-   - Responsive layout
-3. **Lines 354-663**: HTML Structure
-   - Header with title and controls
-   - Toolbar with view toggles and actions
-   - Main container with three panels (editor, preview, mindmap)
-   - File manager sidebar
-   - Modal dialogs (settings, help, templates)
-4. **Lines 664-683**: External JavaScript Libraries
-   - marked.js (Markdown parsing)
-   - d3.js (visualizations)
-   - markmap (mindmaps)
-   - reveal.js (presentations)
-   - html2canvas & jsPDF (PDF export)
-   - highlight.js (syntax highlighting)
-   - mermaid.js (diagrams)
-5. **Lines 685-1288**: Application JavaScript (`app` object)
-6. **Lines 1291-1320**: SVG Icon Sprite Sheet
+1. Reads `src/html/template.html` as base
+2. Bundles all CSS files from `src/css/`
+3. Bundles all JS modules from `src/js/`
+4. Inlines modals and icons from `src/html/`
+5. Replaces placeholders in template
+6. Outputs single `dist/index.html` file
 
-## Key Application Features
+**Commands:**
+```bash
+npm run build   # Production build
+npm run watch   # Development mode with auto-rebuild
+npm run dev     # Build + HTTP server on port 8000
+```
 
-### 1. File Management (lines 686-688, 869-965)
-- Files stored in `app.files` object
-- Each file: `{name, content, modified}`
-- Persisted to localStorage as `itil_files`
-- Current file tracked in `app.currentFile`
+## Core Modules
 
-### 2. View System (lines 689, 1083-1095)
-- Three views: `editor`, `preview`, `mindmap`
-- Toggle visibility via `app.toggleView()`
-- Views tracked in `app.views` object
+### Storage Module (`src/js/modules/storage.js`)
 
-### 3. Theme System (lines 702-708, 810-828)
-- Five themes: dark, light, dracula, nord, monokai
-- CSS variables for consistency
-- Theme state in `app.settings.theme`
-- Applied via `app.setTheme()`
+Handles all localStorage operations.
 
-### 4. Presentation Mode (lines 1142-1194)
-- Uses Reveal.js for slide rendering
-- Slides separated by `---` in Markdown
-- YAML frontmatter support for theme
-- Fullscreen toggle available
+**Key Functions:**
+- `loadFiles()` - Load files from localStorage
+- `saveFiles(files)` - Save files to localStorage
+- `loadSettings()` - Load user settings
+- `saveSettings(settings)` - Save user settings
+- `getStorageInfo()` - Get storage usage statistics
 
-### 5. Export Capabilities (lines 971-1064)
-- Markdown (.md)
-- HTML (standalone with inline styles)
-- PDF Preview (screenshot of rendered markdown)
-- PDF Slides (each slide as separate page)
+**LocalStorage Keys:**
+- `mdnotes_files` - All markdown files
+- `mdnotes_settings_v2` - User settings
 
-### 6. Mermaid Diagram Support (lines 719-720, 1066-1076)
-- Auto-renders code blocks with `language-mermaid` class
-- Theme synced with app theme
-- Re-renders on preview updates
+### Theme Module (`src/js/modules/theme.js`)
+
+Manages application themes.
+
+**Key Functions:**
+- `apply(themeName)` - Apply a theme
+- `getCurrent()` - Get current theme name
+- `getAll()` - Get all available themes
+
+**Available Themes:**
+- `dark` - Default dark theme
+- `light` - Light theme
+- `dracula` - Dracula color scheme
+- `nord` - Nord color palette
+- `monokai` - Monokai inspired
+
+**Adding a New Theme:**
+1. Add to `themes` object in `theme.js`
+2. Add CSS variables in `src/css/variables.css`
+3. Add preset button in `src/html/modals.html`
+4. Rebuild with `npm run build`
+
+### File Manager Module (`src/js/modules/file-manager.js`)
+
+Manages file operations and UI.
+
+**Class: `FileManager`**
+
+**Key Methods:**
+- `init()` - Initialize file manager
+- `render()` - Render file list UI
+- `switchFile(filename)` - Switch to different file
+- `createFile(filename, content)` - Create new file
+- `deleteFile(filename)` - Delete file
+- `saveCurrentFile(content)` - Save current file
+- `loadExternalFiles(fileList)` - Import external files
+- `toggleVisibility()` - Show/hide file manager
+
+**Callbacks:**
+- `onFileChange` - Called when file switches
+
+### Editor Module (`src/js/modules/editor.js`)
+
+Manages the CodeMirror editor (with fallback to textarea).
+
+**Class: `Editor`**
+
+**Key Methods:**
+- `init()` - Initialize editor (tries CodeMirror, falls back to textarea)
+- `getValue()` - Get editor content
+- `setValue(content)` - Set editor content
+- `insertMarkdown(prefix, suffix, placeholder)` - Insert formatting
+- `setTheme(theme)` - Change editor theme
+- `setFontSize(size)` - Change font size
+- `setFontFamily(family)` - Change font family
+- `refresh()` - Refresh editor
+- `getStats()` - Get lines, words, chars
+- `toggleFullscreen()` - Toggle fullscreen mode
+
+**CodeMirror Features:**
+- Line numbers
+- Syntax highlighting (markdown mode)
+- Auto-close brackets
+- Active line highlighting
+- Match highlighting
+- Keyboard shortcuts (Ctrl+B, Ctrl+I, Ctrl+K)
+
+### Preview Module (`src/js/modules/preview.js`)
+
+Renders markdown to HTML with diagrams and charts.
+
+**Class: `Preview`**
+
+**Key Methods:**
+- `init()` - Initialize preview and marked.js
+- `update(markdown)` - Render markdown to HTML
+- `toggleFullscreen()` - Toggle fullscreen mode
+- `exportHTML(markdown, theme)` - Generate standalone HTML
+- `getHTML()` - Get current preview HTML
+
+**Supported Features:**
+- Marked.js with GFM
+- Syntax highlighting (highlight.js)
+- Mermaid diagrams
+- Chart.js charts
+
+### Mindmap Module (`src/js/modules/mindmap.js`)
+
+Generates interactive mindmaps from markdown headings.
+
+**Class: `Mindmap`**
+
+**Key Methods:**
+- `init()` - Initialize markmap
+- `render(markdown)` - Render mindmap
+- `fit()` - Fit mindmap to container
+- `toggleFullscreen()` - Toggle fullscreen mode
+- `exportSVG()` - Export as SVG
+- `exportPNG()` - Export as PNG
+
+### Presentation Module (`src/js/modules/presentation.js`)
+
+Manages Reveal.js presentations.
+
+**Class: `Presentation`**
+
+**Key Methods:**
+- `init()` - Initialize presentation container
+- `start(markdown)` - Start presentation mode
+- `stop()` - Stop presentation mode
+- `toggle(markdown)` - Toggle presentation
+- `exportPDF(filename)` - Export slides to PDF
+- `exportPPTX(filename)` - Export to PowerPoint
+- `setTheme(theme)` - Change Reveal.js theme
+- `toggleFullscreen()` - Toggle fullscreen
+
+**Slide Separator:** `---`
+
+**Content Auto-fitting:**
+- Reveal.js configured with responsive sizing
+- `center: true` centers content
+- Margins adjust to fit content
+
+### Export Manager Module (`src/js/modules/export.js`)
+
+Handles all export formats.
+
+**Class: `ExportManager`**
+
+**Key Methods:**
+- `export(format, content, filename)` - Main export function
+- `exportMarkdown(content, filename)` - Export .md
+- `exportHTML(content, filename)` - Export .html
+- `exportPDFPreview(filename)` - Export preview as PDF
+- `exportPDFSlides(filename)` - Export slides as PDF
+- `exportPPTX(filename)` - Export as PowerPoint
+
+**Supported Formats:**
+- `md` - Markdown file
+- `html` - Standalone HTML
+- `pdf-preview` - Preview as PDF (multi-page)
+- `pdf-slides` - Slides as PDF (one per page)
+- `pptx` - PowerPoint presentation
+
+### Extensions
+
+#### Charts Extension (`src/js/extensions/charts.js`)
+
+Adds Chart.js support for data visualization.
+
+**Usage in Markdown:**
+~~~markdown
+```chart
+{
+  "type": "bar",
+  "data": {
+    "labels": ["Q1", "Q2", "Q3", "Q4"],
+    "datasets": [{
+      "label": "Sales",
+      "data": [12, 19, 15, 25]
+    }]
+  }
+}
+```
+~~~
+
+**Supported Chart Types:**
+- bar, line, pie, doughnut, radar, polarArea
+
+#### Timeline Extension (`src/js/extensions/timeline.js`)
+
+Provides examples and support for Mermaid timelines.
+
+**Usage in Markdown:**
+~~~markdown
+```mermaid
+gantt
+    title Project Timeline
+    dateFormat YYYY-MM-DD
+    section Phase 1
+    Design :done, 2024-01-01, 30d
+    Development :active, 2024-02-01, 60d
+```
+~~~
+
+**Supported Types:**
+- Gantt charts
+- Timeline diagrams
+- Journey maps
+
+## Main Application (`src/js/app.js`)
+
+The `MDNotesApp` class integrates all modules.
+
+**Key Methods:**
+- `init()` - Initialize all modules
+- `toggleView(viewName)` - Toggle editor/preview/mindmap
+- `togglePresentation()` - Enter/exit presentation mode
+- `save()` - Save current file
+- `exportAs(format)` - Export file
+- `setTheme(name)` - Change theme
+- `setFont(font)` - Change font
+- `setFontSize(size)` - Change font size
+- `insertMarkdown(prefix, suffix, placeholder)` - Format text
+- `toggleEditorFullscreen()` - Fullscreen editor
+- `togglePreviewFullscreen()` - Fullscreen preview
+- `toggleMindmapFullscreen()` - Fullscreen mindmap
+
+**Global Access:**
+The app instance is available globally as `window.app`.
 
 ## Development Workflow
 
-### Testing Changes
+### Making Changes
 
-Since this is a single HTML file:
+1. **Edit source files** in `src/`
+   - CSS in `src/css/`
+   - JavaScript in `src/js/`
+   - HTML in `src/html/`
 
-```bash
-# 1. Edit index.html directly
-# 2. Open in browser (or refresh if already open)
-open index.html  # macOS
-xdg-open index.html  # Linux
-start index.html  # Windows
+2. **Build**
+   ```bash
+   npm run build
+   ```
 
-# 3. Check browser console for errors
-# 4. Test features in the UI
-```
+3. **Test**
+   - Open `dist/index.html` in browser
+   - Check console for errors
+   - Test features
 
-### Local Development Server (Optional)
+4. **Iterate**
+   - Use `npm run watch` for auto-rebuild
+   - Use `npm run dev` for live server
 
-```bash
-# Simple HTTP server for testing
-python3 -m http.server 8000
-# Then visit: http://localhost:8000
-```
+### Adding a New Feature
 
-### Debugging Tips
+**Example: Adding a new export format**
 
-1. **Console Errors**: Check browser DevTools console (F12)
-2. **LocalStorage**: View in Application tab of DevTools
-3. **CSS Issues**: Use Elements inspector to check computed styles
-4. **JavaScript**: Add `console.log()` or use debugger breakpoints
+1. **Edit `src/js/modules/export.js`:**
+   ```javascript
+   exportNewFormat(content, filename) {
+       // Your export logic
+       this.download(output, `${filename}.ext`, 'mime/type');
+   }
+   ```
 
-## Code Architecture
+2. **Edit main `export()` method:**
+   ```javascript
+   case 'newformat':
+       return this.exportNewFormat(content, filename);
+   ```
 
-### The `app` Object (lines 686-1282)
+3. **Edit `src/html/template.html`:**
+   ```html
+   <div class="dropdown-item" onclick="app.exportAs('newformat')">
+       <span>as New Format</span>
+   </div>
+   ```
 
-The application is organized as a single object with methods:
+4. **Rebuild:**
+   ```bash
+   npm run build
+   ```
 
-```javascript
-const app = {
-    // State
-    files: {},           // All loaded files
-    currentFile: null,   // Active file name
-    views: {},           // View visibility state
-    mm: null,           // Markmap instance
-    reveal: null,       // Reveal.js instance
-    presentMode: false, // Presentation active?
-    settings: {},       // User preferences
-    themes: {},         // Theme definitions
-    templates: {},      // Presentation templates
+### Adding a New Module
 
-    // Methods (see sections below)
-    init() {},
-    render() {},
-    // ... etc
-};
-```
+1. **Create `src/js/modules/mymodule.js`:**
+   ```javascript
+   export class MyModule {
+       constructor() {}
+       init() {}
+       // Your methods
+   }
+   ```
 
-### Key Methods Reference
+2. **Import in `src/js/app.js`:**
+   ```javascript
+   import { MyModule } from './modules/mymodule.js';
 
-| Method | Purpose | Lines |
-|--------|---------|-------|
-| `init()` | Initialize app on page load | 717-764 |
-| `loadStorage()` | Load from localStorage | 778-790 |
-| `saveStorage()` | Save to localStorage | 792-799 |
-| `render()` | Update file list UI | 869-885 |
-| `updatePreview()` | Convert markdown to HTML | 1066-1076 |
-| `saveFile()` | Save current file | 955-960 |
-| `newFile()` | Create new file | 907-911 |
-| `toggleView()` | Show/hide panels | 1083-1095 |
-| `togglePresentation()` | Enter/exit presentation | 1181-1194 |
-| `exportAs()` | Export to various formats | 971-991 |
-| `setTheme()` | Apply color theme | 810-828 |
-| `insertMarkdown()` | Add markdown formatting | 1204-1222 |
-| `refreshMindmap()` | Update mindmap view | 1244-1258 |
+   // In constructor:
+   this.myModule = null;
 
-## Extension Patterns
+   // In init():
+   this.myModule = new MyModule();
+   await this.myModule.init();
+   ```
 
-### Adding a New Theme
+3. **Add to build script** `build/build.js`:
+   ```javascript
+   const jsModules = [
+       // ... existing modules
+       'modules/mymodule.js'
+   ];
+   ```
 
-1. Add theme to `app.themes` object (line 702):
-```javascript
-themes: {
-    // ... existing themes
-    myTheme: {
-        '--bg-primary': '#...',
-        '--bg-secondary': '#...',
-        // ... all CSS variables
-    }
-}
-```
+4. **Rebuild:**
+   ```bash
+   npm run build
+   ```
 
-2. Add preset button in Settings Modal (line 526):
-```html
-<div class="theme-preset" data-theme="myTheme"
-     style="background:linear-gradient(...)"
-     onclick="app.setTheme('myTheme')"></div>
-```
+## CSS Architecture
 
-### Adding a New Export Format
+### Variables (`src/css/variables.css`)
 
-1. Add option to export menu (line 403):
-```html
-<div class="dropdown-item" onclick="app.exportAs('newformat')">
-    <svg class="icon">...</svg>
-    <span>as New Format</span>
-</div>
-```
-
-2. Add handler in `exportAs()` method (line 971):
-```javascript
-exportAs(fmt) {
-    // ... existing cases
-    case 'newformat':
-        // Your export logic
-        break;
-}
-```
-
-### Adding a Toolbar Button
-
-1. Add button to toolbar (line 373):
-```html
-<button class="toolbar-btn" onclick="app.myNewFeature()" title="...">
-    <svg class="icon"><use href="#icon-name"></use></svg>
-    <span>Label</span>
-</button>
-```
-
-2. Add icon to sprite sheet (line 1291):
-```html
-<symbol id="icon-name" viewBox="0 0 24 24">
-    <!-- SVG path data -->
-</symbol>
-```
-
-3. Add method to `app` object:
-```javascript
-myNewFeature() {
-    // Your feature logic
-}
-```
-
-### Adding a Modal Dialog
-
-1. Add modal HTML (after line 656):
-```html
-<div class="modal" id="myModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">Title</div>
-            <button class="icon-btn" onclick="app.closeModal()">
-                <svg class="icon"><use href="#icon-close"></use></svg>
-            </button>
-        </div>
-        <!-- Modal content -->
-    </div>
-</div>
-```
-
-2. Add show method:
-```javascript
-showMyModal() {
-    document.getElementById('myModal').classList.add('show');
-}
-```
-
-## Styling System
-
-### CSS Variables (lines 19-28)
-
-All colors and fonts use CSS variables for easy theming:
+All colors and fonts use CSS variables:
 
 ```css
 :root {
-    --bg-primary: #1e1e1e;      /* Main background */
-    --bg-secondary: #252526;     /* Secondary panels */
-    --bg-tertiary: #2d2d30;      /* Buttons, inputs */
-    --text-primary: #d4d4d4;     /* Main text */
-    --text-secondary: #808080;   /* Muted text */
-    --border: #3e3e42;           /* Borders */
-    --accent: #007acc;           /* Accent color */
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #252526;
+    --bg-tertiary: #2d2d30;
+    --text-primary: #d4d4d4;
+    --text-secondary: #808080;
+    --border: #3e3e42;
+    --accent: #007acc;
     --font-family: 'Consolas', monospace;
+    --font-size: 13px;
 }
 ```
 
-### Responsive Classes
+Themes override variables via `[data-theme="name"]` selectors.
 
-- `.hidden` - Hides elements
-- `.active` - Highlights active buttons
-- `.fullscreen` - Fullscreen mode for preview
-- `.show` - Shows modal dialogs
+### Components (`src/css/components.css`)
 
-### Toolbar Styles (lines 112-114)
+All UI components styled here:
+- Header, toolbar, buttons
+- File manager
+- Editor, preview, mindmap panels
+- Status bar
+- Dropdowns
 
-Body attribute controls toolbar appearance:
-- `data-toolbar-style="icon-only"` - Icons only (default)
-- `data-toolbar-style="icon-text"` - Icons with labels
-- `data-toolbar-style="text-only"` - Text labels only
+### Modals (`src/css/modals.css`)
+
+Modal dialog styles:
+- Settings modal
+- New file modal
+- Help modal
+- Templates modal
+
+### Utility Classes
+
+- `.hidden` - Display none
+- `.fullscreen-mode` - Fullscreen panel
+- `.active` - Active button state
+- `.show` - Show modal
+
+## Keyboard Shortcuts
+
+| Shortcut | Action | Handler |
+|----------|--------|---------|
+| `Ctrl/Cmd + S` | Save file | app.js |
+| `Ctrl/Cmd + N` | New file | app.js |
+| `Ctrl/Cmd + B` | Bold | editor.js (CodeMirror) |
+| `Ctrl/Cmd + I` | Italic | editor.js (CodeMirror) |
+| `Ctrl/Cmd + K` | Link | editor.js (CodeMirror) |
 
 ## External Dependencies
 
-All loaded via CDN (no npm/build process needed):
+All loaded via CDN:
 
-| Library | Version | Purpose | Lines |
-|---------|---------|---------|-------|
-| marked.js | Latest | Markdown → HTML parsing | 665 |
-| d3.js | v7 | Data visualization | 666 |
-| markmap-autoloader | Latest | Mindmap generation | 667 |
-| reveal.js | 4.6.1 | Presentation framework | 670-671 |
-| html2canvas | 1.4.1 | Screenshot for PDF | 674 |
-| jsPDF | 2.5.1 | PDF generation | 675 |
-| highlight.js | 11.9.0 | Syntax highlighting | 680 |
-| mermaid.js | 10.9.1 | Diagram rendering | 683 |
-
-### Library Integration Notes
-
-**marked.js**: Enhanced with extensions (lines 767-776)
-- `markedGfmHeadingId` for heading IDs
-- `markedHighlight` for code syntax highlighting
-
-**Mermaid**: Initialized with theme sync (line 720)
-```javascript
-mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-```
-
-**Reveal.js**: Dynamically initialized only in presentation mode (lines 1142-1171)
-
-## Storage System
-
-### LocalStorage Keys
-
-- `itil_files` - All files (JSON object)
-- `itil_settings_v4` - User settings (JSON object)
-
-### Data Structures
-
-**Files Object**:
-```javascript
-{
-    "filename.md": {
-        name: "filename.md",
-        content: "# Markdown content...",
-        modified: 1234567890  // timestamp
-    }
-}
-```
-
-**Settings Object**:
-```javascript
-{
-    theme: 'dark',
-    font: "'Consolas',monospace",
-    size: '13px',
-    revealTheme: 'black',
-    appName: 'ITIL 4 Editor',
-    toolbarStyle: 'icon-only'
-}
-```
-
-### Storage Methods
-
-- `loadStorage()` (line 778) - Load on init
-- `saveStorage()` (line 792) - Save state
-- `save()` (line 962) - Auto-save on edit
+| Library | Version | Purpose |
+|---------|---------|---------|
+| marked.js | Latest | Markdown parsing |
+| CodeMirror | 5.65.16 | Code editor |
+| Reveal.js | 4.6.1 | Presentations |
+| Mermaid | 10.9.1 | Diagrams |
+| Chart.js | 4.4.0 | Charts |
+| markmap | Latest | Mindmaps |
+| d3.js | 7 | Visualization |
+| html2canvas | 1.4.1 | Screenshots |
+| jsPDF | 2.5.1 | PDF generation |
+| PptxGenJS | 3.12.0 | PowerPoint export |
+| highlight.js | 11.9.0 | Syntax highlighting |
 
 ## Best Practices for AI Assistants
 
 ### When Modifying Code
 
-1. **Always read the full file first** - It's only ~1300 lines
-2. **Use Edit tool for changes** - Never rewrite the entire file
-3. **Test in browser** - Changes won't work until loaded in browser
-4. **Check console for errors** - JavaScript errors will break features
-5. **Preserve formatting** - Maintain consistent indentation (4 spaces)
+1. **Edit source files in `src/`**, never `dist/index.html`
+2. **Run build** after changes: `npm run build`
+3. **Test in browser** by opening `dist/index.html`
+4. **Check console** for errors
+5. **Maintain module structure** - keep concerns separated
+6. **Use existing patterns** - follow established code style
+7. **Update documentation** - README, TODO, CLAUDE.md
 
 ### Common Modification Patterns
 
-**Adding a feature**:
-1. Add UI elements (HTML)
-2. Add styles (CSS in `<style>`)
-3. Add method to `app` object
-4. Wire up event handlers
+**Add a UI button:**
+1. Edit `src/html/template.html` - add button HTML
+2. Edit `src/css/components.css` - add styles
+3. Edit `src/js/app.js` - add click handler
+4. Rebuild and test
 
-**Fixing bugs**:
-1. Locate the method in `app` object
-2. Add console.log() for debugging
-3. Fix the logic
-4. Test in browser
+**Add a feature:**
+1. Create module in `src/js/modules/` or `src/js/extensions/`
+2. Import in `src/js/app.js`
+3. Add UI elements in `src/html/`
+4. Add styles in `src/css/`
+5. Update build script if needed
+6. Rebuild and test
 
-**Changing styles**:
-1. Modify CSS variables for theme changes
-2. Add new classes for new components
-3. Use existing classes when possible
+**Change styling:**
+1. Edit appropriate CSS file in `src/css/`
+2. Use CSS variables when possible
+3. Rebuild and test
+
+**Fix a bug:**
+1. Locate the relevant module
+2. Fix the code
+3. Test thoroughly
+4. Document the fix
 
 ### Security Considerations
 
-⚠️ **Important**: This application runs entirely in the browser with no backend:
+⚠️ **Important:**
 
-1. **No authentication** - Anyone with file access can use it
-2. **LocalStorage limits** - ~5-10MB total storage
-3. **No server-side validation** - All validation client-side
-4. **XSS via Markdown** - Marked.js should sanitize, but be careful with user input
-5. **No file encryption** - All data stored in plain text
+1. **Client-side only** - No server, no auth
+2. **LocalStorage** - Unencrypted, ~5-10MB limit
+3. **XSS risk** - marked.js sanitizes, but be careful
+4. **CORS** - May affect external resources
+5. **No backend** - All processing in browser
 
 ### Performance Notes
 
-- **Large files** may slow down preview rendering
-- **Complex Mermaid diagrams** can be slow to render
-- **PDF export** is CPU-intensive (uses html2canvas)
-- **Mindmap** performance degrades with >100 nodes
-
-## Common Tasks
-
-### Changing Default Theme
-Edit line 694:
-```javascript
-settings: {
-    theme: 'dark',  // Change to: 'light', 'dracula', 'nord', 'monokai'
-    // ...
-}
-```
-
-### Changing App Name
-Edit line 698:
-```javascript
-settings: {
-    // ...
-    appName: 'ITIL 4 Editor',  // Change to your name
-}
-```
-
-### Adding a Keyboard Shortcut
-Add to event listener at line 1285:
-```javascript
-document.addEventListener('keydown', e => {
-    // ... existing shortcuts
-    if ((e.ctrlKey||e.metaKey) && e.key==='x') {
-        e.preventDefault();
-        app.yourFunction();
-    }
-});
-```
-
-### Modifying Default Welcome Content
-Edit lines 724-745 in `init()` method:
-```javascript
-this.files['welcome.md'] = {
-    name: 'welcome.md',
-    content: `# Your custom welcome message...`,
-    modified: Date.now()
-};
-```
+- **Large files** (>1MB) may slow editor
+- **Complex diagrams** slow rendering
+- **PDF export** is CPU-intensive
+- **Mindmaps** slow with >100 nodes
+- **Build time** increases with more modules
 
 ## Troubleshooting
 
-### Preview Not Updating
-- Check `updatePreview()` method (line 1066)
-- Verify marked.js is loaded: `typeof marked` in console
-- Check for JavaScript errors in console
+### Build Issues
 
-### Presentation Mode Not Working
-- Ensure `---` separators in markdown
-- Check reveal.js loaded: `typeof Reveal` in console
-- Verify `initReveal()` returns true
+**Error: Cannot find module**
+```bash
+npm install  # Reinstall dependencies
+```
 
-### PDF Export Failing
-- Check html2canvas loaded: `typeof html2canvas`
-- Check jsPDF loaded: `typeof jspdf`
-- Look for canvas rendering errors in console
+**Build produces empty file**
+- Check placeholder names in template
+- Verify file paths in build script
+- Check console for errors
 
-### Mindmap Not Rendering
-- Wait ~1 second after page load (autoloader delay)
-- Check `window.markmap` exists
-- Verify markdown has heading structure
+### Runtime Issues
 
-### LocalStorage Full
-- Check storage: `localStorage.length` in console
-- Clear old files or reduce content size
-- LocalStorage limit: ~5MB per domain
+**CodeMirror not loading**
+- Check browser console
+- Verify CDN links in template
+- Falls back to textarea automatically
+
+**Diagrams not rendering**
+- Wait 1-2 seconds for library load
+- Check for syntax errors in markdown
+- Verify library loaded: `typeof mermaid`
+
+**Export failing**
+- Check browser console
+- Verify library loaded (html2canvas, jsPDF, PptxGenJS)
+- Try smaller document
 
 ## Git Workflow
 
 Current branch: `claude/claude-md-mi4bibsgbfp4zd3r-0188DDvU1Dm7w4QQcoZNzxUg`
 
-### Making Changes
+### Commit Guidelines
 
 ```bash
-# 1. Make changes to index.html or add new files
-# 2. Test in browser
-# 3. Stage changes
-git add index.html CLAUDE.md
+# Stage changes
+git add src/ build/ package.json README.md TODO.md CLAUDE.md
 
-# 4. Commit with clear message
+# Commit with clear message
 git commit -m "Add: feature description"
 
-# 5. Push to feature branch
+# Push to branch
 git push -u origin claude/claude-md-mi4bibsgbfp4zd3r-0188DDvU1Dm7w4QQcoZNzxUg
 ```
 
-### Commit Message Conventions
+### Commit Conventions
 
 - `Add:` - New features
 - `Fix:` - Bug fixes
-- `Update:` - Enhancements to existing features
+- `Update:` - Enhancements
 - `Refactor:` - Code reorganization
-- `Docs:` - Documentation changes
-- `Style:` - CSS/visual changes
+- `Docs:` - Documentation
+- `Build:` - Build system changes
 
 ## Quick Reference
 
 ### File Locations
-- Main application: `/home/user/mdnotes/index.html`
-- This documentation: `/home/user/mdnotes/CLAUDE.md`
 
-### Key Line Numbers
-- CSS Variables: 19-28
-- Theme System: 702-708
-- App Init: 717-764
-- File Management: 869-965
-- Preview Rendering: 1066-1076
-- Presentation Mode: 1142-1194
-- Export Functions: 971-1064
+- **Source files**: `src/`
+- **Built output**: `dist/index.html`
+- **Build scripts**: `build/`
+- **Documentation**: `README.md`, `TODO.md`, `CLAUDE.md`
 
-### Important Methods
+### Build Commands
+
+```bash
+npm run build   # Production build
+npm run watch   # Auto-rebuild on changes
+npm run dev     # Build + serve on :8000
+```
+
+### Key Classes
+
 ```javascript
-app.init()              // Initialize app
-app.render()            // Render file list
-app.updatePreview()     // Update markdown preview
-app.save()              // Save current file
-app.toggleView(name)    // Toggle view visibility
-app.setTheme(name)      // Change theme
-app.exportAs(format)    // Export file
+// Global app instance
+window.app
+
+// Core modules
+app.storage       // Storage
+app.theme         // Theme
+app.fileManager   // File Manager
+app.editor        // Editor
+app.preview       // Preview
+app.mindmap       // Mindmap
+app.presentation  // Presentation
+app.exportManager // Export Manager
+
+// Extensions
+app.chartsExt     // Charts
+app.timelineExt   // Timeline
 ```
 
 ## Additional Resources
 
-- Markdown Guide: https://www.markdownguide.org/
-- Reveal.js Docs: https://revealjs.com/
-- Mermaid Docs: https://mermaid.js.org/
-- Marked.js Docs: https://marked.js.org/
+- **README.md** - User-facing documentation
+- **TODO.md** - Feature roadmap and task list
+- **package.json** - Project configuration
+- **Markdown Guide**: https://www.markdownguide.org/
+- **Reveal.js Docs**: https://revealjs.com/
+- **Mermaid Docs**: https://mermaid.js.org/
+- **Chart.js Docs**: https://www.chartjs.org/
 
 ---
 
 **Last Updated**: 2025-11-18
-**Version**: 1.0
+**Version**: 2.0.0 (Modular Architecture)
 **Maintainer**: AI Assistant Documentation

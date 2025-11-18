@@ -1,0 +1,181 @@
+<!-- Settings Modal -->
+<div class="modal" id="settingsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">⚙️ Settings</div>
+            <button class="icon-btn" onclick="app.closeModal()">
+                <svg class="icon"><use href="#icon-close"></use></svg>
+            </button>
+        </div>
+
+        <div class="form-group">
+            <label>App Name</label>
+            <input type="text" id="appNameInput" onchange="app.setAppName(this.value)">
+        </div>
+
+        <div class="form-group">
+            <label>Toolbar Style</label>
+            <select id="toolbarStyleSelect" onchange="app.setToolbarStyle(this.value)">
+                <option value="icon-only">Icon Only</option>
+                <option value="icon-text">Icon & Text</option>
+                <option value="text-only">Text Only</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Theme</label>
+            <div style="margin:10px 0">
+                <div class="theme-preset active" data-theme="dark" style="background:linear-gradient(to right,#1e1e1e,#2d2d30)" onclick="app.setTheme('dark')"></div>
+                <div class="theme-preset" data-theme="light" style="background:linear-gradient(to right,#fff,#f0f0f0)" onclick="app.setTheme('light')"></div>
+                <div class="theme-preset" data-theme="dracula" style="background:linear-gradient(to right,#282a36,#44475a)" onclick="app.setTheme('dracula')"></div>
+                <div class="theme-preset" data-theme="nord" style="background:linear-gradient(to right,#2e3440,#3b4252)" onclick="app.setTheme('nord')"></div>
+                <div class="theme-preset" data-theme="monokai" style="background:linear-gradient(to right,#272822,#3e3d32)" onclick="app.setTheme('monokai')"></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Font</label>
+            <select id="fontSelect" onchange="app.setFont(this.value)">
+                <option value="'Consolas',monospace">Consolas</option>
+                <option value="'Fira Code',monospace">Fira Code</option>
+                <option value="'Source Code Pro',monospace">Source Code Pro</option>
+                <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
+                <option value="'Roboto Mono',monospace">Roboto Mono</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Font Size</label>
+            <select id="sizeSelect" onchange="app.setFontSize(this.value)">
+                <option>11px</option>
+                <option>12px</option>
+                <option selected>13px</option>
+                <option>14px</option>
+                <option>15px</option>
+                <option>16px</option>
+                <option>18px</option>
+            </select>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn" onclick="app.closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- New File Modal -->
+<div class="modal" id="newFileModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">New File</div>
+            <button class="icon-btn" onclick="app.closeModal()">
+                <svg class="icon"><use href="#icon-close"></use></svg>
+            </button>
+        </div>
+        <div class="form-group">
+            <label>Filename:</label>
+            <input type="text" id="newFileName" placeholder="filename.md" onkeypress="if(event.key==='Enter') app.createFile()">
+        </div>
+        <div class="modal-actions">
+            <button class="btn" onclick="app.closeModal()">Cancel</button>
+            <button class="btn" onclick="app.createFile()">Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- Presentation Templates Modal -->
+<div class="modal" id="templatesModal">
+    <div class="modal-content" style="min-width:600px">
+        <div class="modal-header">
+            <div class="modal-title">📋 Presentation Templates</div>
+            <button class="icon-btn" onclick="app.closeModal()">
+                <svg class="icon"><use href="#icon-close"></use></svg>
+            </button>
+        </div>
+        <div class="form-group">
+            <label>Template:</label>
+            <select id="templateSelect">
+                <option value="basic">Basic Presentation</option>
+                <option value="principles">7 Key Principles</option>
+                <option value="timeline">Timeline & Gantt Charts</option>
+                <option value="charts">Chart Examples</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Reveal.js Theme:</label>
+            <select id="revealThemeSelect">
+                <option value="black">Black (Default)</option>
+                <option value="white">White</option>
+                <option value="league">League</option>
+                <option value="sky">Sky</option>
+                <option value="beige">Beige</option>
+                <option value="serif">Serif</option>
+                <option value="simple">Simple</option>
+                <option value="solarized">Solarized</option>
+                <option value="night">Night</option>
+                <option value="moon">Moon</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" onclick="app.closeModal()">Cancel</button>
+            <button class="btn" onclick="app.applyTemplateAndSettings()">Apply</button>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal" id="helpModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">💡 Help & Info</div>
+            <button class="icon-btn" onclick="app.closeModal()">
+                <svg class="icon"><use href="#icon-close"></use></svg>
+            </button>
+        </div>
+
+        <h2>Welcome to MDNotes Pro</h2>
+        <p>A professional markdown editor with advanced presentation and visualization capabilities.</p>
+
+        <h2>Key Features</h2>
+        <ul>
+            <li><p><b>CodeMirror Editor:</b> Advanced code editing with syntax highlighting and shortcuts</p></li>
+            <li><p><b>Live Preview:</b> Real-time markdown rendering with diagram support</p></li>
+            <li><p><b>Mindmap:</b> Automatic mindmap generation from document structure</p></li>
+            <li><p><b>Presentations:</b> Create slides with Reveal.js (separate with <code>---</code>)</p></li>
+            <li><p><b>Diagrams:</b> Mermaid flowcharts, timelines, Gantt charts</p></li>
+            <li><p><b>Charts:</b> Data visualization with Chart.js</p></li>
+            <li><p><b>Export:</b> MD, HTML, PDF (preview & slides), PowerPoint</p></li>
+            <li><p><b>Fullscreen:</b> All panels support fullscreen mode</p></li>
+        </ul>
+
+        <h2>Keyboard Shortcuts</h2>
+        <ul>
+            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>S</kbd>: Save file</li>
+            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>N</kbd>: New file</li>
+            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>B</kbd>: Bold</li>
+            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>I</kbd>: Italic</li>
+            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>K</kbd>: Insert link</li>
+        </ul>
+
+        <h2>Markdown Syntax</h2>
+        <ul>
+            <li><code># Heading 1</code>, <code>## Heading 2</code>, etc.</li>
+            <li><code>**bold**</code>, <code>*italic*</code>, <code>`code`</code></li>
+            <li><code>- List item</code>, <code>1. Numbered item</code></li>
+            <li><code>[Link text](url)</code>, <code>![Alt text](image-url)</code></li>
+            <li><code>> Blockquote</code></li>
+            <li><code>```language ... ```</code> for code blocks</li>
+        </ul>
+
+        <h2>Diagram Types</h2>
+        <p>Use code blocks with these languages:</p>
+        <ul>
+            <li><code>```mermaid</code> - Flowcharts, sequence diagrams, etc.</li>
+            <li><code>```chart</code> - Chart.js data visualizations (JSON format)</li>
+        </ul>
+
+        <div class="modal-actions">
+            <button class="btn" onclick="app.closeModal()">Close</button>
+        </div>
+    </div>
+</div>
