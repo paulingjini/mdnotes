@@ -5,7 +5,7 @@
 
 import { Storage } from './modules/storage.js';
 import { Theme } from './modules/theme.js';
-import { FileManager } from './modules/file-manager.js';
+import { AdvancedFileSystem } from './modules/file-system-advanced.js';
 import { Editor } from './modules/editor.js';
 import { Preview } from './modules/preview.js';
 import { Mindmap } from './modules/mindmap.js';
@@ -76,7 +76,7 @@ class MDNotesApp {
         this.theme.apply(this.settings.theme);
 
         // Initialize modules
-        this.fileManager = new FileManager(this.storage);
+        this.fileManager = new AdvancedFileSystem(this.storage);
         this.editor = new Editor();
         this.preview = new Preview();
         this.mindmap = new Mindmap();

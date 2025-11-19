@@ -147,7 +147,7 @@ body[data-toolbar-style="icon-text"] .toolbar-btn {
 
 /* File Manager */
 .file-manager {
-    width: 200px;
+    width: 250px;
     background: var(--bg-secondary);
     border-right: 1px solid var(--border);
     display: flex;
@@ -164,6 +164,9 @@ body[data-toolbar-style="icon-text"] .toolbar-btn {
     border-bottom: 1px solid var(--border);
     font-size: 11px;
     font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .file-list {
@@ -171,14 +174,74 @@ body[data-toolbar-style="icon-text"] .toolbar-btn {
     overflow-y: auto;
 }
 
-.file-item {
-    padding: 8px 10px;
+/* Folder Items */
+.folder-item {
+    padding: 6px 10px;
     cursor: pointer;
     font-size: 12px;
     border-bottom: 1px solid var(--border);
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 6px;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.folder-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.folder-toggle {
+    cursor: pointer;
+    width: 14px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+.folder-icon {
+    font-size: 14px;
+}
+
+.folder-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.folder-actions {
+    display: none;
+    gap: 4px;
+}
+
+.folder-item:hover .folder-actions {
+    display: flex;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    font-size: 12px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.action-btn:hover {
+    opacity: 1;
+}
+
+/* File Items */
+.file-item {
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+    transition: background 0.2s;
 }
 
 .file-item:hover {
@@ -188,6 +251,26 @@ body[data-toolbar-style="icon-text"] .toolbar-btn {
 .file-item.active {
     background: var(--accent);
     color: white;
+}
+
+.file-icon {
+    font-size: 14px;
+}
+
+.file-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-actions {
+    display: none;
+    gap: 4px;
+}
+
+.file-item:hover .file-actions {
+    display: flex;
 }
 
 .file-item .delete-btn {
@@ -203,6 +286,21 @@ body[data-toolbar-style="icon-text"] .toolbar-btn {
 
 .file-item .delete-btn .icon:hover {
     color: #f44336;
+}
+
+/* File Tags */
+.file-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 10px;
+    border-radius: 10px;
+    color: white;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.file-tag:hover {
+    opacity: 0.8;
 }
 
 /* Panels */

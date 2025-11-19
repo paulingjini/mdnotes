@@ -44,6 +44,7 @@ const jsModules = [
     'modules/storage.js',
     'modules/theme.js',
     'modules/file-manager.js',
+    'modules/file-system-advanced.js',
     'modules/editor.js',
     'modules/preview.js',
     'modules/mindmap.js',
