@@ -93,7 +93,47 @@
 - [x] Code comments
 - [x] Usage examples
 
-## 🚧 In Progress
+## ✅ Completed (v2.1.0)
+
+### Advanced File Management
+- [x] Notion-like hierarchical file system
+- [x] Folder structure with nesting
+- [x] Tag system with auto-generated colors
+- [x] Favorites and archive functionality
+- [x] Search and filter by folder/tag/favorite
+- [x] Drag & drop support structure
+- [x] File metadata system (created, modified, folder, tags)
+- [x] Migration from old file format
+
+### Synchronization
+- [x] Bi-directional scroll sync (editor ↔ preview)
+- [x] Cursor position tracking
+- [x] Section highlighting in preview
+- [x] Sync toggle control
+- [x] scrollToHeading functionality
+
+### Advanced Export
+- [x] Programmatic PDF generation (jsPDF)
+- [x] DOCX (Word) export with docx.js
+- [x] Enhanced PPTX with template support
+- [x] Markdown token-based export (not DOM rendering)
+
+### Presentation Templates
+- [x] JSON-based template system
+- [x] 4 professional templates (corporate, modern, academic, startup)
+- [x] Full customization (colors, fonts, logo, footer)
+- [x] Logo positioning (top-left, top-right, bottom-left, bottom-right)
+- [x] Footer positioning
+- [x] Template import/export
+- [x] Dynamic CSS injection
+
+### Interactive Features (v2.1.0 continued)
+- [x] Bidirectional editing (click preview → jump to editor)
+- [x] Mindmap active node focus with highlighting
+- [x] Interactive tables (sort by column, filter, export CSV)
+- [x] Enhanced task lists with checkboxes and progress bars
+
+## 🚧 In Progress (v2.2.0)
 
 ### Testing & QA
 - [ ] Cross-browser testing (Chrome, Firefox, Safari, Edge)
@@ -101,7 +141,13 @@
 - [ ] Performance optimization
 - [ ] Error handling improvements
 
-## 📋 Planned Features (v2.1.0)
+### Enterprise Features
+- [ ] Advanced template/configuration UI management
+- [ ] Download all external libraries locally (no CDN)
+- [ ] Modern UI with shadcn/ui design system
+- [ ] Integrate timesheet.js for timeline visualization
+
+## 📋 Planned Features (v2.2.0)
 
 ### Enhanced Editor
 - [ ] Multiple cursor support
@@ -121,7 +167,6 @@
 - [ ] Version history
 
 ### Advanced Export
-- [ ] DOCX (Word) export
 - [ ] EPUB (eBook) export
 - [ ] LaTeX export
 - [ ] PDF with custom styling
@@ -236,10 +281,11 @@
 
 ## 🗓️ Release Schedule
 
-- **v2.0.0** - Current (Modular architecture, all core features)
-- **v2.1.0** - Q1 2025 (Enhanced editor, advanced export)
-- **v2.2.0** - Q2 2025 (Collaboration, cloud sync)
-- **v2.3.0** - Q3 2025 (AI integration, plugins)
+- **v2.0.0** - ✅ Released (Modular architecture, all core features)
+- **v2.1.0** - ✅ Released (Advanced file system, sync, templates, enhanced export)
+- **v2.2.0** - Current (Enterprise features, modern UI, interactive components)
+- **v2.3.0** - Q2 2025 (Collaboration, cloud sync)
+- **v2.4.0** - Q3 2025 (AI integration, plugins)
 - **v3.0.0** - Q4 2025 (Desktop/mobile apps)
 
 ## 📝 Notes
@@ -252,5 +298,5 @@
 
 ---
 
-**Last Updated**: 2025-11-18
-**Version**: 2.0.0
+**Last Updated**: 2025-11-19
+**Version**: 2.1.0

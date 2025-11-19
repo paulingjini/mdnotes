@@ -44,6 +44,7 @@ const jsModules = [
     'modules/storage.js',
     'modules/theme.js',
     'modules/file-manager.js',
+    'modules/file-system-advanced.js',
     'modules/editor.js',
     'modules/preview.js',
     'modules/mindmap.js',
@@ -54,6 +55,8 @@ const jsModules = [
     'modules/sync.js',
     'extensions/charts.js',
     'extensions/timeline.js',
+    'extensions/interactive-tables.js',
+    'extensions/task-lists.js',
     'app.js'
 ];
 

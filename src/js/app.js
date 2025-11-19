@@ -5,7 +5,7 @@
 
 import { Storage } from './modules/storage.js';
 import { Theme } from './modules/theme.js';
-import { FileManager } from './modules/file-manager.js';
+import { AdvancedFileSystem } from './modules/file-system-advanced.js';
 import { Editor } from './modules/editor.js';
 import { Preview } from './modules/preview.js';
 import { Mindmap } from './modules/mindmap.js';
@@ -13,6 +13,8 @@ import { Presentation } from './modules/presentation.js';
 import { ExportManager } from './modules/export.js';
 import { ChartsExtension } from './extensions/charts.js';
 import { TimelineExtension } from './extensions/timeline.js';
+import { InteractiveTablesExtension } from './extensions/interactive-tables.js';
+import { TaskListsExtension } from './extensions/task-lists.js';
 import { SyncManager } from './modules/sync.js';
 import { PresentationTemplates } from './modules/presentation-templates.js';
 import { AdvancedExport } from './modules/export-advanced.js';
@@ -32,6 +34,8 @@ class MDNotesApp {
         // Extensions
         this.chartsExt = null;
         this.timelineExt = null;
+        this.interactiveTablesExt = null;
+        this.taskListsExt = null;
 
         // Advanced features
         this.syncManager = null;
@@ -76,7 +80,7 @@ class MDNotesApp {
         this.theme.apply(this.settings.theme);
 
         // Initialize modules
-        this.fileManager = new FileManager(this.storage);
+        this.fileManager = new AdvancedFileSystem(this.storage);
         this.editor = new Editor();
         this.preview = new Preview();
         this.mindmap = new Mindmap();
@@ -108,6 +112,12 @@ class MDNotesApp {
 
         this.timelineExt = new TimelineExtension();
         this.timelineExt.init();
+
+        this.interactiveTablesExt = new InteractiveTablesExtension();
+        this.interactiveTablesExt.init();
+
+        this.taskListsExt = new TaskListsExtension();
+        this.taskListsExt.init();
 
         // Initialize advanced features
         this.syncManager = new SyncManager(this.editor, this.preview, this.mindmap);
@@ -211,6 +221,9 @@ class MDNotesApp {
         if (this.views.preview && !this.presentation.isActive) {
             this.preview.update(content);
             this.chartsExt.process(this.preview.container);
+            this.timelineExt.process(this.preview.container);
+            this.interactiveTablesExt.process(this.preview.container);
+            this.taskListsExt.process(this.preview.container, content);
         }
 
         // Update mindmap if visible
@@ -272,8 +285,12 @@ class MDNotesApp {
         }
 
         if (viewName === 'preview' && this.views.preview) {
-            this.preview.update(this.editor.getValue());
+            const content = this.editor.getValue();
+            this.preview.update(content);
             this.chartsExt.process(this.preview.container);
+            this.timelineExt.process(this.preview.container);
+            this.interactiveTablesExt.process(this.preview.container);
+            this.taskListsExt.process(this.preview.container, content);
         }
 
         // Refresh editor after layout change
@@ -671,6 +688,24 @@ class MDNotesApp {
     scrollToHeading(headingText) {
         if (this.syncManager) {
             this.syncManager.scrollToHeading(headingText);
+        }
+    }
+
+    /**
+     * Mindmap Focus Methods
+     */
+    toggleMindmapFocus() {
+        if (this.mindmap) {
+            const newState = this.mindmap.toggleFocus();
+            this.showNotification(`Mindmap focus ${newState ? 'enabled' : 'disabled'}`, 'success');
+            return newState;
+        }
+        return false;
+    }
+
+    focusMindmapNode(nodeIndex) {
+        if (this.mindmap) {
+            this.mindmap.highlightNode(nodeIndex);
         }
     }
 }
