@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Editor Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        #test-results {
+            background: #252526;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #0e7a0d;
+        }
+        .error {
+            background: #a80000;
+        }
+        .info {
+            background: #007acc;
+        }
+        #editor-container {
+            min-height: 400px;
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+    </style>
+</head>
+<body>
+    <h1>Block Editor Test Suite</h1>
+
+    <div id="test-results">
+        <h2>Test Results</h2>
+        <div id="results"></div>
+    </div>
+
+    <div>
+        <button onclick="runTests()">Run Tests</button>
+        <button onclick="createTestPage()">Create Test Page</button>
+        <button onclick="initEditor()">Initialize Editor</button>
+        <button onclick="exportMarkdown()">Export to Markdown</button>
+    </div>
+
+    <div id="editor-container"></div>
+
+    <!-- Load main app (includes all dependencies) -->
+    <script src="dist/index.html"></script>
+
+    <script>
+        let testPageId = null;
+        let testEditor = null;
+        const results = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-item ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        function clear() {
+            results.innerHTML = '';
+        }
+
+        async function runTests() {
+            clear();
+            log('Starting Block Editor Tests...', 'info');
+
+            // Test 1: Check Dexie
+            if (typeof Dexie !== 'undefined') {
+                log('✓ Dexie.js loaded', 'success');
+            } else {
+                log('✗ Dexie.js NOT loaded', 'error');
+                return;
+            }
+
+            // Test 2: Check db
+            if (window.db) {
+                log('✓ window.db available', 'success');
+            } else {
+                log('✗ window.db NOT available', 'error');
+                return;
+            }
+
+            // Test 3: Check Block
+            if (typeof window.Block !== 'undefined') {
+                log('✓ window.Block available', 'success');
+            } else {
+                log('✗ window.Block NOT available', 'error');
+                return;
+            }
+
+            // Test 4: Check BlockEditor
+            if (typeof window.BlockEditor !== 'undefined') {
+                log('✓ window.BlockEditor available', 'success');
+            } else {
+                log('✗ window.BlockEditor NOT available', 'error');
+                return;
+            }
+
+            // Test 5: Create a page
+            try {
+                testPageId = await db.createPage('Test Page ' + Date.now());
+                log(`✓ Created page with ID: ${testPageId}`, 'success');
+            } catch (error) {
+                log(`✗ Failed to create page: ${error.message}`, 'error');
+                return;
+            }
+
+            // Test 6: Create a block
+            try {
+                const blockId = await db.createBlock(testPageId, 'h1', 'Hello World');
+                log(`✓ Created block with ID: ${blockId}`, 'success');
+            } catch (error) {
+                log(`✗ Failed to create block: ${error.message}`, 'error');
+                return;
+            }
+
+            // Test 7: Get page blocks
+            try {
+                const blocks = await db.getPageBlocks(testPageId);
+                log(`✓ Retrieved ${blocks.length} blocks`, 'success');
+            } catch (error) {
+                log(`✗ Failed to get blocks: ${error.message}`, 'error');
+                return;
+            }
+
+            // Test 8: Markdown conversion
+            try {
+                const markdown = await db.blocksToMarkdown(testPageId);
+                log(`✓ Converted to markdown: "${markdown.trim()}"`, 'success');
+            } catch (error) {
+                log(`✗ Failed to convert to markdown: ${error.message}`, 'error');
+                return;
+            }
+
+            log('All tests passed! ✓', 'success');
+        }
+
+        async function createTestPage() {
+            clear();
+            try {
+                testPageId = await db.createPage('Test Page ' + new Date().toLocaleTimeString());
+                await db.createBlock(testPageId, 'h1', 'Welcome to Block Editor');
+                await db.createBlock(testPageId, 'text', 'This is a test page created at ' + new Date().toLocaleString());
+                await db.createBlock(testPageId, 'bullet', 'Feature 1');
+                await db.createBlock(testPageId, 'bullet', 'Feature 2');
+                await db.createBlock(testPageId, 'todo', 'Try the slash command');
+
+                log(`✓ Created test page with ID: ${testPageId}`, 'success');
+                log('You can now click "Initialize Editor" to see it', 'info');
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function initEditor() {
+            clear();
+            if (!testPageId) {
+                log('Please create a test page first', 'error');
+                return;
+            }
+
+            try {
+                const container = document.getElementById('editor-container');
+                testEditor = new BlockEditor(container);
+                await testEditor.init(testPageId);
+                log('✓ Block Editor initialized successfully!', 'success');
+                log('Try typing "/" to see the slash command menu', 'info');
+            } catch (error) {
+                log(`✗ Failed to initialize editor: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function exportMarkdown() {
+            clear();
+            if (!testEditor) {
+                log('Please initialize editor first', 'error');
+                return;
+            }
+
+            try {
+                const markdown = await testEditor.exportToMarkdown();
+                log('Exported Markdown:', 'info');
+                log(markdown, 'success');
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('Page loaded, ready to test', 'info');
+            }, 500);
+        });
+    </script>
+</body>
+</html>

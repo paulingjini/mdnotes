@@ -308,3 +308,6 @@ export class BlockEditor {
         this.pageId = null;
     }
 }
+
+// Expose globally
+window.BlockEditor = BlockEditor;

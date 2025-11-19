@@ -59,6 +59,11 @@
             </button>
         </div>
         <div class="separator"></div>
+        <button class="toolbar-btn" id="btnEditorMode" onclick="app.toggleEditorMode()" title="Toggle Editor Mode (Markdown ↔ Blocks)">
+            <svg class="icon"><use href="#icon-layers"></use></svg>
+            <span id="editorModeLabel">Markdown</span>
+        </button>
+        <div class="separator"></div>
         <button class="toolbar-btn" onclick="app.save()" title="Save (Ctrl+S)">
             <svg class="icon"><use href="#icon-save"></use></svg>
             <span>Save</span>
@@ -151,6 +156,7 @@
                 </button>
             </div>
             <textarea id="editor" spellcheck="false"></textarea>
+            <div id="blockEditorContainer" class="block-editor-container hidden"></div>
         </div>
 
         <!-- Preview Panel -->
