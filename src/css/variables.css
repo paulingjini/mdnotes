@@ -9,6 +9,10 @@
     --accent: #007acc;
     --font-family: 'Consolas', monospace;
     --font-size: 13px;
+
+    /* shadcn compatibility */
+    --background: #1e1e1e;
+    --foreground: #d4d4d4;
 }
 
 /* Theme: Light */
@@ -20,6 +24,9 @@
     --text-secondary: #666;
     --border: #ccc;
     --accent: #0066cc;
+
+    --background: #fff;
+    --foreground: #000;
 }
 
 /* Theme: Dracula */
@@ -31,6 +38,9 @@
     --text-secondary: #6272a4;
     --border: #44475a;
     --accent: #bd93f9;
+
+    --background: #282a36;
+    --foreground: #f8f8f2;
 }
 
 /* Theme: Nord */
@@ -42,6 +52,9 @@
     --text-secondary: #d8dee9;
     --border: #4c566a;
     --accent: #88c0d0;
+
+    --background: #2e3440;
+    --foreground: #eceff4;
 }
 
 /* Theme: Monokai */
@@ -53,4 +66,7 @@
     --text-secondary: #75715e;
     --border: #3e3d32;
     --accent: #66d9ef;
+
+    --background: #272822;
+    --foreground: #f8f8f2;
 }

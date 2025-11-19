@@ -288,6 +288,40 @@ body[data-toolbar-style="icon-text"] .toolbar-btn {
     color: #f44336;
 }
 
+/* Drag & Drop Styles */
+.folder-item.dragging,
+.file-item.dragging {
+    opacity: 0.5;
+    background: var(--bg-tertiary);
+}
+
+.folder-item.drag-over {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+.folder-count {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-left: auto;
+}
+
+.folder-select-item {
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.folder-select-item:hover {
+    background: var(--bg-tertiary);
+}
+
 /* File Tags */
 .file-tag {
     display: inline-block;

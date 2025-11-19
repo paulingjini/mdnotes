@@ -125,53 +125,329 @@
 
 <!-- Help Modal -->
 <div class="modal" id="helpModal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
         <div class="modal-header">
-            <div class="modal-title">💡 Help & Info</div>
+            <div class="modal-title">💡 Help & Complete Guide</div>
             <button class="icon-btn" onclick="app.closeModal()">
                 <svg class="icon"><use href="#icon-close"></use></svg>
             </button>
         </div>
 
-        <h2>Welcome to MDNotes Pro</h2>
-        <p>A professional markdown editor with advanced presentation and visualization capabilities.</p>
+        <h2>🚀 Welcome to MDNotes Pro v2.1.0</h2>
+        <p>A professional, production-ready markdown editor with advanced presentation, visualization, and file management capabilities.</p>
 
-        <h2>Key Features</h2>
+        <h2>📁 File Management (Notion-style)</h2>
+        <h3>Organizing Files</h3>
         <ul>
-            <li><p><b>CodeMirror Editor:</b> Advanced code editing with syntax highlighting and shortcuts</p></li>
-            <li><p><b>Live Preview:</b> Real-time markdown rendering with diagram support</p></li>
-            <li><p><b>Mindmap:</b> Automatic mindmap generation from document structure</p></li>
-            <li><p><b>Presentations:</b> Create slides with Reveal.js (separate with <code>---</code>)</p></li>
-            <li><p><b>Diagrams:</b> Mermaid flowcharts, timelines, Gantt charts</p></li>
-            <li><p><b>Charts:</b> Data visualization with Chart.js</p></li>
-            <li><p><b>Export:</b> MD, HTML, PDF (preview & slides), PowerPoint</p></li>
-            <li><p><b>Fullscreen:</b> All panels support fullscreen mode</p></li>
+            <li><b>Create Folders:</b> Click ➕ on any folder to create subfolders</li>
+            <li><b>Move Files:</b> Drag and drop files into folders</li>
+            <li><b>Rename/Delete:</b> Use ✏️ and 🗑️ buttons on folders</li>
+            <li><b>Expand/Collapse:</b> Click ▶/▼ to toggle folder visibility</li>
+        </ul>
+        <h3>Tags & Organization</h3>
+        <ul>
+            <li><b>Add Tags:</b> Click 🏷️ on any file to add color-coded tags</li>
+            <li><b>Favorites:</b> Click ☆ to mark important files (shows ⭐)</li>
+            <li><b>Archive:</b> Click 📦 to archive old files</li>
+            <li><b>Search:</b> Use the search box to find files by name, content, or tags</li>
         </ul>
 
-        <h2>Keyboard Shortcuts</h2>
+        <h2>⌨️ Keyboard Shortcuts</h2>
+        <table style="width:100%; margin:10px 0;">
+            <tr><td><kbd>Ctrl/Cmd + S</kbd></td><td>Save current file</td></tr>
+            <tr><td><kbd>Ctrl/Cmd + N</kbd></td><td>Create new file</td></tr>
+            <tr><td><kbd>Ctrl/Cmd + B</kbd></td><td>Bold text</td></tr>
+            <tr><td><kbd>Ctrl/Cmd + I</kbd></td><td>Italic text</td></tr>
+            <tr><td><kbd>Ctrl/Cmd + K</kbd></td><td>Insert link</td></tr>
+            <tr><td><kbd>F11</kbd></td><td>Toggle fullscreen</td></tr>
+        </table>
+
+        <h2>📝 Markdown Syntax Guide</h2>
+        <h3>Text Formatting</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+# Heading 1
+## Heading 2
+### Heading 3
+
+**bold text**
+*italic text*
+***bold and italic***
+~~strikethrough~~
+`inline code`
+
+> Blockquote
+> Multiple lines</pre>
+
+        <h3>Lists</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+Unordered list:
+- Item 1
+- Item 2
+  - Nested item
+
+Ordered list:
+1. First item
+2. Second item
+3. Third item
+
+Task list:
+- [ ] Todo item
+- [x] Completed item</pre>
+
+        <h3>Links & Images</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+[Link text](https://example.com)
+![Image alt text](image-url.jpg)
+[Link with title](url "Title on hover")</pre>
+
+        <h3>Tables</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Data A   | Data B   | Data C   |
+
+✨ Tables are interactive! Click headers to sort,
+use filter box to search, export to CSV.</pre>
+
+        <h3>Code Blocks</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+```javascript
+function hello() {
+    console.log("Hello World!");
+}
+```
+
+Supports: javascript, python, java, cpp, html,
+css, sql, bash, and many more languages.</pre>
+
+        <h2>📊 Mermaid Diagrams</h2>
+        <h3>Flowchart</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+```mermaid
+graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Action 1]
+    B -->|No| D[Action 2]
+    C --> E[End]
+    D --> E
+```</pre>
+
+        <h3>Sequence Diagram</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+```mermaid
+sequenceDiagram
+    Alice->>John: Hello John!
+    John-->>Alice: Hi Alice!
+    Alice->>John: How are you?
+```</pre>
+
+        <h3>Gantt Chart</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+```mermaid
+gantt
+    title Project Timeline
+    dateFormat YYYY-MM-DD
+    section Phase 1
+    Design      :done, 2024-01-01, 30d
+    Development :active, 2024-02-01, 60d
+    section Phase 2
+    Testing     :2024-04-01, 20d
+    Deployment  :2024-04-21, 10d
+```</pre>
+
+        <h3>Pie Chart</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+```mermaid
+pie title Market Share
+    "Product A" : 42
+    "Product B" : 28
+    "Product C" : 30
+```</pre>
+
+        <h2>📈 Chart.js Visualizations</h2>
+        <h3>Bar Chart</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+```chart
+{
+  "type": "bar",
+  "data": {
+    "labels": ["Q1", "Q2", "Q3", "Q4"],
+    "datasets": [{
+      "label": "Sales 2024",
+      "data": [12, 19, 15, 25],
+      "backgroundColor": "#007acc"
+    }]
+  }
+}
+```</pre>
+
+        <h3>Line Chart</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+```chart
+{
+  "type": "line",
+  "data": {
+    "labels": ["Jan", "Feb", "Mar", "Apr"],
+    "datasets": [{
+      "label": "Revenue",
+      "data": [65, 72, 81, 89],
+      "borderColor": "#4ECDC4",
+      "fill": false
+    }]
+  }
+}
+```</pre>
+
+        <h3>Pie/Doughnut Chart</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+```chart
+{
+  "type": "pie",
+  "data": {
+    "labels": ["Red", "Blue", "Yellow"],
+    "datasets": [{
+      "data": [300, 50, 100],
+      "backgroundColor": ["#FF6384", "#36A2EB", "#FFCE56"]
+    }]
+  }
+}
+```
+
+Types: bar, line, pie, doughnut, radar, polarArea</pre>
+
+        <h2>📅 Timeline Visualization (Timesheet.js)</h2>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+```timesheet
+{
+  "sections": [
+    {
+      "name": "Development",
+      "events": [
+        {
+          "name": "Backend API",
+          "start": "2024-01-01",
+          "end": "2024-03-01"
+        },
+        {
+          "name": "Frontend UI",
+          "start": "2024-02-01",
+          "end": "2024-04-01"
+        }
+      ]
+    },
+    {
+      "name": "Design",
+      "events": [
+        {
+          "name": "Wireframes",
+          "start": "2024-01-01",
+          "end": "2024-01-15"
+        }
+      ]
+    }
+  ]
+}
+```</pre>
+
+        <h2>🎯 Interactive Features</h2>
+        <h3>✅ Task Lists</h3>
+        <p>Create interactive checkboxes with progress tracking:</p>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+- [ ] Task 1
+- [x] Task 2 (completed)
+- [ ] Task 3
+
+✨ Click checkboxes in preview to toggle!
+Shows progress bars automatically.</pre>
+
+        <h3>📊 Interactive Tables</h3>
         <ul>
-            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>S</kbd>: Save file</li>
-            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>N</kbd>: New file</li>
-            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>B</kbd>: Bold</li>
-            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>I</kbd>: Italic</li>
-            <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>K</kbd>: Insert link</li>
+            <li><b>Sort:</b> Click column headers to sort (asc/desc/none)</li>
+            <li><b>Filter:</b> Use search box to filter rows</li>
+            <li><b>Export:</b> Click export button to save as CSV</li>
         </ul>
 
-        <h2>Markdown Syntax</h2>
+        <h3>🔄 Bidirectional Editing</h3>
         <ul>
-            <li><code># Heading 1</code>, <code>## Heading 2</code>, etc.</li>
-            <li><code>**bold**</code>, <code>*italic*</code>, <code>`code`</code></li>
-            <li><code>- List item</code>, <code>1. Numbered item</code></li>
-            <li><code>[Link text](url)</code>, <code>![Alt text](image-url)</code></li>
-            <li><code>> Blockquote</code></li>
-            <li><code>```language ... ```</code> for code blocks</li>
+            <li>Click any heading, paragraph, or list in <b>Preview</b></li>
+            <li>Editor automatically jumps to that line</li>
+            <li>Visual highlight shows the location</li>
         </ul>
 
-        <h2>Diagram Types</h2>
-        <p>Use code blocks with these languages:</p>
+        <h3>🧠 Mindmap Focus</h3>
         <ul>
-            <li><code>```mermaid</code> - Flowcharts, sequence diagrams, etc.</li>
-            <li><code>```chart</code> - Chart.js data visualizations (JSON format)</li>
+            <li>Mindmap shows document structure as interactive diagram</li>
+            <li>Click nodes to explore nested content</li>
+            <li>Toggle focus mode to highlight active section</li>
+            <li>Export as SVG or PNG</li>
+        </ul>
+
+        <h2>🎤 Presentation Mode</h2>
+        <h3>Creating Slides</h3>
+        <pre style="background: var(--bg-secondary); padding: 10px; border-radius: 4px;">
+---
+theme: black
+---
+
+# Slide 1 Title
+
+Content here...
+
+---
+
+## Slide 2
+
+- Point 1
+- Point 2
+
+---
+
+## Slide 3
+
+More content...</pre>
+        <p><b>Separator:</b> Use <code>---</code> to split slides</p>
+        <p><b>Themes:</b> black, white, league, sky, beige, serif, simple, solarized, night, moon</p>
+        <p><b>Navigation:</b> Arrow keys, space bar, or on-screen controls</p>
+
+        <h2>💾 Export Formats</h2>
+        <table style="width:100%; margin:10px 0;">
+            <tr><td><b>Markdown (.md)</b></td><td>Plain text format</td></tr>
+            <tr><td><b>HTML</b></td><td>Standalone web page with styles</td></tr>
+            <tr><td><b>PDF (Preview)</b></td><td>Multi-page document from preview</td></tr>
+            <tr><td><b>PDF (Slides)</b></td><td>One slide per page</td></tr>
+            <tr><td><b>PowerPoint (.pptx)</b></td><td>Editable presentation</td></tr>
+            <tr><td><b>DOCX</b></td><td>Word document format</td></tr>
+            <tr><td><b>CSV</b></td><td>From interactive tables</td></tr>
+        </table>
+
+        <h2>🎨 Themes</h2>
+        <ul>
+            <li><b>Dark:</b> Professional dark mode (VS Code style)</li>
+            <li><b>Light:</b> Clean light theme</li>
+            <li><b>Dracula:</b> Popular dark color scheme</li>
+            <li><b>Nord:</b> Arctic-inspired palette</li>
+            <li><b>Monokai:</b> Classic code editor theme</li>
+        </ul>
+
+        <h2>💡 Pro Tips</h2>
+        <ul>
+            <li>Use <b>Ctrl+S</b> frequently to save your work</li>
+            <li>Organize files with folders and tags from the start</li>
+            <li>Create presentation templates for reuse</li>
+            <li>Use bidirectional editing to navigate large documents</li>
+            <li>Export mindmaps as images for documentation</li>
+            <li>Interactive tables work great with data from spreadsheets</li>
+            <li>Use task lists for project management</li>
+            <li>Fullscreen mode works on all panels (F11)</li>
+        </ul>
+
+        <h2>🔗 Resources</h2>
+        <ul>
+            <li><a href="https://www.markdownguide.org/" target="_blank">Markdown Guide</a></li>
+            <li><a href="https://mermaid.js.org/" target="_blank">Mermaid Documentation</a></li>
+            <li><a href="https://www.chartjs.org/" target="_blank">Chart.js Documentation</a></li>
+            <li><a href="https://revealjs.com/" target="_blank">Reveal.js (Presentations)</a></li>
         </ul>
 
         <div class="modal-actions">

@@ -320,10 +320,12 @@ export class AdvancedFileSystem {
         const folderEl = document.createElement('div');
         folderEl.className = 'folder-item';
         folderEl.style.paddingLeft = `${node.level * 15}px`;
+        folderEl.dataset.folderId = node.id;
         folderEl.innerHTML = `
             <span class="folder-toggle">${node.expanded ? '▼' : '▶'}</span>
             <span class="folder-icon">${node.icon}</span>
             <span class="folder-name">${node.name}</span>
+            <span class="folder-count">(${this.getFileCount(node.id)})</span>
             <div class="folder-actions">
                 ${node.id !== 'root' ? '<button class="action-btn" data-action="rename" title="Rename">✏️</button>' : ''}
                 ${node.id !== 'root' ? '<button class="action-btn" data-action="delete" title="Delete">🗑️</button>' : ''}
@@ -345,9 +347,52 @@ export class AdvancedFileSystem {
                 const action = btn.dataset.action;
                 if (action === 'add') this.showAddFolderDialog(node.id);
                 if (action === 'rename') this.showRenameFolderDialog(node.id);
-                if (action === 'delete') this.deleteFolder(node.id);
+                if (action === 'delete') this.confirmDeleteFolder(node.id);
             };
         });
+
+        // Drag & drop for folders
+        folderEl.ondragover = (e) => {
+            e.preventDefault();
+            folderEl.classList.add('drag-over');
+        };
+
+        folderEl.ondragleave = (e) => {
+            if (e.target === folderEl) {
+                folderEl.classList.remove('drag-over');
+            }
+        };
+
+        folderEl.ondrop = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            folderEl.classList.remove('drag-over');
+
+            const filename = e.dataTransfer.getData('filename');
+            const sourceFolderId = e.dataTransfer.getData('folderId');
+
+            if (filename) {
+                // Moving a file
+                this.moveFileWithFeedback(filename, node.id);
+            } else if (sourceFolderId && sourceFolderId !== node.id) {
+                // Moving a folder
+                this.moveFolderToFolder(sourceFolderId, node.id);
+            }
+        };
+
+        // Make folders draggable (except root)
+        if (node.id !== 'root') {
+            folderEl.draggable = true;
+            folderEl.ondragstart = (e) => {
+                e.dataTransfer.setData('folderId', node.id);
+                e.dataTransfer.effectAllowed = 'move';
+                folderEl.classList.add('dragging');
+            };
+
+            folderEl.ondragend = (e) => {
+                folderEl.classList.remove('dragging');
+            };
+        }
 
         container.appendChild(folderEl);
 
@@ -374,6 +419,7 @@ export class AdvancedFileSystem {
         fileEl.className = 'file-item' + (file.name === this.currentFile ? ' active' : '');
         fileEl.style.paddingLeft = `${level * 15}px`;
         fileEl.draggable = true;
+        fileEl.dataset.filename = file.name;
 
         const tags = file.metadata.tags || [];
         const tagsHTML = tags.map(tag =>
@@ -385,6 +431,7 @@ export class AdvancedFileSystem {
             <span class="file-name">${file.name}</span>
             ${tagsHTML}
             <div class="file-actions">
+                <button class="action-btn" data-action="move" title="Move">📁</button>
                 <button class="action-btn" data-action="favorite" title="Favorite">${file.metadata.favorite ? '★' : '☆'}</button>
                 <button class="action-btn" data-action="tag" title="Add Tag">🏷️</button>
                 <button class="action-btn" data-action="archive" title="Archive">📦</button>
@@ -400,16 +447,30 @@ export class AdvancedFileSystem {
             btn.onclick = (e) => {
                 e.stopPropagation();
                 const action = btn.dataset.action;
+                if (action === 'move') this.showMoveFileDialog(file.name);
                 if (action === 'favorite') this.toggleFavorite(file.name);
                 if (action === 'tag') this.showAddTagDialog(file.name);
                 if (action === 'archive') this.toggleArchive(file.name);
-                if (action === 'delete') this.deleteFile(file.name);
+                if (action === 'delete') this.confirmDeleteFile(file.name);
             };
         });
 
-        // Drag and drop
+        // Drag and drop with visual feedback
         fileEl.ondragstart = (e) => {
             e.dataTransfer.setData('filename', file.name);
+            e.dataTransfer.effectAllowed = 'move';
+            fileEl.classList.add('dragging');
+
+            // Create drag image
+            const dragImage = fileEl.cloneNode(true);
+            dragImage.style.opacity = '0.5';
+            document.body.appendChild(dragImage);
+            e.dataTransfer.setDragImage(dragImage, 0, 0);
+            setTimeout(() => dragImage.remove(), 0);
+        };
+
+        fileEl.ondragend = (e) => {
+            fileEl.classList.remove('dragging');
         };
 
         return fileEl;
@@ -555,5 +616,192 @@ export class AdvancedFileSystem {
         if (data.tags) this.tags = data.tags;
         this.saveData();
         this.render();
+    }
+
+    /**
+     * Get file count in folder
+     */
+    getFileCount(folderId) {
+        return Object.values(this.files).filter(
+            file => file.metadata.folder === folderId && !file.metadata.archived
+        ).length;
+    }
+
+    /**
+     * Move file with visual feedback
+     */
+    moveFileWithFeedback(filename, folderId) {
+        if (!this.files[filename]) return;
+
+        const oldFolder = this.files[filename].metadata.folder;
+        if (oldFolder === folderId) return;
+
+        this.moveFile(filename, folderId);
+
+        // Show notification
+        if (window.app && window.app.showNotification) {
+            const folderName = this.folders[folderId]?.name || 'folder';
+            window.app.showNotification(`Moved "${filename}" to ${folderName}`, 'success');
+        }
+    }
+
+    /**
+     * Move folder to another folder
+     */
+    moveFolderToFolder(sourceFolderId, targetFolderId) {
+        if (sourceFolderId === targetFolderId) return;
+        if (sourceFolderId === 'root' || targetFolderId === 'root') return;
+
+        const sourceFolder = this.folders[sourceFolderId];
+        if (!sourceFolder) return;
+
+        // Check if target is a child of source (prevent circular reference)
+        if (this.isDescendant(targetFolderId, sourceFolderId)) {
+            if (window.app && window.app.showNotification) {
+                window.app.showNotification('Cannot move folder into its own subfolder', 'error');
+            }
+            return;
+        }
+
+        // Remove from old parent
+        if (sourceFolder.parent && this.folders[sourceFolder.parent]) {
+            this.folders[sourceFolder.parent].children =
+                this.folders[sourceFolder.parent].children.filter(id => id !== sourceFolderId);
+        }
+
+        // Add to new parent
+        sourceFolder.parent = targetFolderId;
+        if (!this.folders[targetFolderId].children.includes(sourceFolderId)) {
+            this.folders[targetFolderId].children.push(sourceFolderId);
+        }
+
+        this.saveData();
+        this.render();
+
+        if (window.app && window.app.showNotification) {
+            window.app.showNotification('Folder moved successfully', 'success');
+        }
+    }
+
+    /**
+     * Check if folder is descendant of another
+     */
+    isDescendant(folderId, potentialAncestorId) {
+        let current = this.folders[folderId];
+        while (current && current.parent) {
+            if (current.parent === potentialAncestorId) {
+                return true;
+            }
+            current = this.folders[current.parent];
+        }
+        return false;
+    }
+
+    /**
+     * Confirm delete file with modern dialog
+     */
+    confirmDeleteFile(filename) {
+        if (window.app && window.app.showConfirmDialog) {
+            window.app.showConfirmDialog(
+                'Delete File',
+                `Are you sure you want to delete "${filename}"?`,
+                () => this.deleteFile(filename)
+            );
+        } else {
+            // Fallback to native confirm
+            if (confirm(`Delete "${filename}"?`)) {
+                this.deleteFile(filename);
+            }
+        }
+    }
+
+    /**
+     * Confirm delete folder with modern dialog
+     */
+    confirmDeleteFolder(folderId) {
+        if (folderId === 'root') return;
+
+        const folder = this.folders[folderId];
+        if (!folder) return;
+
+        const fileCount = this.getFileCount(folderId);
+        const message = fileCount > 0
+            ? `Delete "${folder.name}"? It contains ${fileCount} file(s) that will be moved to parent folder.`
+            : `Delete "${folder.name}"?`;
+
+        if (window.app && window.app.showConfirmDialog) {
+            window.app.showConfirmDialog(
+                'Delete Folder',
+                message,
+                () => this.deleteFolder(folderId)
+            );
+        } else {
+            // Fallback to native confirm
+            if (confirm(message)) {
+                this.deleteFolder(folderId);
+            }
+        }
+    }
+
+    /**
+     * Show move file dialog
+     */
+    showMoveFileDialog(filename) {
+        if (!this.files[filename]) return;
+
+        // Create a simple modal with folder list
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">Move "${filename}"</div>
+                    <button class="icon-btn" onclick="this.closest('.modal').remove()">✕</button>
+                </div>
+                <div class="form-group">
+                    <label>Select destination folder:</label>
+                    <div id="folderSelectList" style="max-height: 300px; overflow-y: auto;">
+                        ${this.renderFolderSelectList()}
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="this.closest('.modal').remove()">Cancel</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Add click handlers to folders
+        modal.querySelectorAll('.folder-select-item').forEach(item => {
+            item.onclick = () => {
+                const folderId = item.dataset.folderId;
+                this.moveFileWithFeedback(filename, folderId);
+                modal.remove();
+            };
+        });
+    }
+
+    /**
+     * Render folder select list for move dialog
+     */
+    renderFolderSelectList(folderId = 'root', level = 0) {
+        const folder = this.folders[folderId];
+        if (!folder) return '';
+
+        let html = `
+            <div class="folder-select-item" data-folder-id="${folderId}"
+                 style="padding-left: ${level * 20}px; padding: 8px; cursor: pointer; border-radius: 4px;">
+                <span>${folder.icon || '📁'}</span>
+                <span>${folder.name}</span>
+            </div>
+        `;
+
+        // Render children
+        folder.children.forEach(childId => {
+            html += this.renderFolderSelectList(childId, level + 1);
+        });
+
+        return html;
     }
 }
