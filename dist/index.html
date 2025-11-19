@@ -1668,6 +1668,394 @@ select {
 }
 
 
+/**
+ * Block-Based Editor Styles
+ * Notion-style blocks with contentEditable
+ */
+
+/* Block Container */
+.block-container {
+    display: flex;
+    align-items: flex-start;
+    padding: 3px 0;
+    position: relative;
+    transition: background 0.1s ease;
+}
+
+.block-container:hover {
+    background: var(--bg-tertiary);
+}
+
+.block-container.block-focused {
+    background: var(--bg-tertiary);
+}
+
+/* Block Handle (Drag Icon) */
+.block-handle {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    cursor: grab;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-right: 4px;
+    transition: opacity 0.2s ease;
+    user-select: none;
+}
+
+.block-container:hover .block-handle {
+    opacity: 1;
+}
+
+.block-handle:active {
+    cursor: grabbing;
+}
+
+/* Block Content Area */
+.block-content-area {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Block Content (contentEditable) */
+.block-content {
+    outline: none;
+    padding: 3px 2px;
+    min-height: 1.5em;
+    line-height: 1.6;
+    color: var(--text-primary);
+    position: relative;
+}
+
+.block-content:empty:before {
+    content: attr(data-placeholder);
+    color: var(--text-secondary);
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Block Prefix (non-editable) */
+.block-prefix {
+    user-select: none;
+    color: var(--text-secondary);
+    margin-right: 4px;
+    font-weight: 600;
+}
+
+/* Block Types */
+.block-type-h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 12px 0 8px 0;
+    line-height: 1.3;
+}
+
+.block-type-h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 10px 0 6px 0;
+    line-height: 1.4;
+}
+
+.block-type-h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 8px 0 4px 0;
+    line-height: 1.4;
+}
+
+.block-type-text {
+    font-size: 14px;
+}
+
+.block-type-todo {
+    font-size: 14px;
+}
+
+.block-type-todo .block-prefix {
+    cursor: pointer;
+    user-select: none;
+}
+
+.block-type-todo .block-prefix:hover {
+    color: var(--accent);
+}
+
+.block-type-bullet {
+    font-size: 14px;
+}
+
+.block-type-numbered {
+    font-size: 14px;
+}
+
+.block-type-quote {
+    font-size: 14px;
+    font-style: italic;
+    border-left: 3px solid var(--border);
+    padding-left: 12px;
+    color: var(--text-secondary);
+}
+
+.block-type-code {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    background: var(--bg-tertiary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+
+.block-type-toggle {
+    font-size: 14px;
+}
+
+.block-type-toggle .block-prefix {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.block-type-toggle.expanded .block-prefix {
+    transform: rotate(90deg);
+}
+
+/* Slash Command Menu */
+.slash-menu {
+    position: fixed;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 6px;
+    min-width: 280px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    animation: slideDown 0.15s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slash-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    gap: 12px;
+}
+
+.slash-menu-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.slash-menu-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.slash-menu-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.slash-menu-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Block Editor Container */
+.block-editor {
+    padding: 40px 96px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.block-editor-title {
+    font-size: 40px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    padding: 8px 0;
+    outline: none;
+    border: none;
+    background: transparent;
+    width: 100%;
+    color: var(--text-primary);
+}
+
+.block-editor-title:empty:before {
+    content: 'Untitled';
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+.block-editor-blocks {
+    margin-top: 16px;
+}
+
+/* Nested Blocks (Indented) */
+.block-nested {
+    margin-left: 24px;
+    border-left: 1px solid var(--border);
+    padding-left: 12px;
+}
+
+/* Block Selection */
+.block-container.selected {
+    background: rgba(var(--accent), 0.1);
+}
+
+/* Block Hover Actions */
+.block-actions {
+    position: absolute;
+    left: -40px;
+    top: 3px;
+    display: none;
+    align-items: center;
+    gap: 4px;
+}
+
+.block-container:hover .block-actions {
+    display: flex;
+}
+
+.block-action-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.block-action-btn:hover {
+    opacity: 1;
+    background: var(--bg-tertiary);
+}
+
+/* Drag and Drop States */
+.block-container.dragging {
+    opacity: 0.5;
+}
+
+.block-container.drag-over {
+    border-top: 2px solid var(--accent);
+}
+
+/* Block Placeholder (when empty page) */
+.block-editor-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.block-editor-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.block-editor-empty-text {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.block-editor-empty-hint {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .block-editor {
+        padding: 24px 20px;
+    }
+
+    .block-editor-title {
+        font-size: 32px;
+    }
+
+    .block-type-h1 {
+        font-size: 28px;
+    }
+
+    .block-type-h2 {
+        font-size: 22px;
+    }
+
+    .block-type-h3 {
+        font-size: 16px;
+    }
+}
+
+/* Loading State */
+.block-editor-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+
+.block-editor-loading::after {
+    content: '...';
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
+/* Scrollbar for Slash Menu */
+.slash-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.slash-menu::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+.slash-menu::-webkit-scrollbar-thumb {
+    background: var(--text-secondary);
+    border-radius: 4px;
+}
+
+.slash-menu::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+}
+
+
 
     </style>
 </head>
@@ -2444,6 +2832,9 @@ More content...</pre>
 
 
     <!-- External JavaScript Libraries -->
+    <!-- Dexie.js for IndexedDB (Block Editor) -->
+    <script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader"></script>
@@ -3747,6 +4138,1235 @@ class AdvancedFileSystem {
         });
 
         return html;
+    }
+}
+
+
+/**
+ * Blocks Database - IndexedDB with Dexie.js
+ * Notion-style block-based editor persistence
+ *
+ * Note: Requires Dexie.js to be loaded globally via CDN
+ * <script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"></script>
+ */
+
+class BlocksDatabase extends Dexie {
+    constructor() {
+        super('MDNotesBlocks');
+
+        this.version(1).stores({
+            pages: '++id, title, icon, coverImage, createdAt, updatedAt, isFavorite, parentId',
+            blocks: '++id, pageId, type, content, properties, parentId, *childIds, position, createdAt, updatedAt'
+        });
+
+        // Type definitions for better IDE support
+        this.pages = this.table('pages');
+        this.blocks = this.table('blocks');
+    }
+
+    /**
+     * Create a new page
+     */
+    async createPage(title = 'Untitled', parentId = null) {
+        const now = Date.now();
+        const pageId = await this.pages.add({
+            title,
+            icon: '📄',
+            coverImage: null,
+            createdAt: now,
+            updatedAt: now,
+            isFavorite: false,
+            parentId
+        });
+
+        // Create initial empty block
+        await this.createBlock(pageId, 'text', '', null, 0);
+
+        return pageId;
+    }
+
+    /**
+     * Create a new block
+     */
+    async createBlock(pageId, type = 'text', content = '', parentId = null, position = 0) {
+        const now = Date.now();
+        const blockId = await this.blocks.add({
+            pageId,
+            type,
+            content,
+            properties: {},
+            parentId,
+            childIds: [],
+            position,
+            createdAt: now,
+            updatedAt: now
+        });
+
+        return blockId;
+    }
+
+    /**
+     * Get all blocks for a page (root level only)
+     */
+    async getPageBlocks(pageId) {
+        return await this.blocks
+            .where({ pageId, parentId: null })
+            .sortBy('position');
+    }
+
+    /**
+     * Get all blocks for a page (including nested)
+     */
+    async getAllPageBlocks(pageId) {
+        return await this.blocks
+            .where('pageId')
+            .equals(pageId)
+            .sortBy('position');
+    }
+
+    /**
+     * Get child blocks
+     */
+    async getChildBlocks(parentId) {
+        return await this.blocks
+            .where({ parentId })
+            .sortBy('position');
+    }
+
+    /**
+     * Update block content
+     */
+    async updateBlock(blockId, updates) {
+        return await this.blocks.update(blockId, {
+            ...updates,
+            updatedAt: Date.now()
+        });
+    }
+
+    /**
+     * Update block content only
+     */
+    async updateBlockContent(blockId, content) {
+        return await this.updateBlock(blockId, { content });
+    }
+
+    /**
+     * Update block type
+     */
+    async updateBlockType(blockId, type) {
+        return await this.updateBlock(blockId, { type });
+    }
+
+    /**
+     * Delete block and its children
+     */
+    async deleteBlock(blockId) {
+        const block = await this.blocks.get(blockId);
+        if (!block) return false;
+
+        // Delete children recursively
+        if (block.childIds && block.childIds.length > 0) {
+            for (const childId of block.childIds) {
+                await this.deleteBlock(childId);
+            }
+        }
+
+        // Remove from parent's childIds
+        if (block.parentId) {
+            const parent = await this.blocks.get(block.parentId);
+            if (parent) {
+                const updatedChildIds = parent.childIds.filter(id => id !== blockId);
+                await this.blocks.update(block.parentId, { childIds: updatedChildIds });
+            }
+        }
+
+        // Delete the block
+        await this.blocks.delete(blockId);
+        return true;
+    }
+
+    /**
+     * Indent block (make it child of previous sibling)
+     */
+    async indentBlock(blockId) {
+        const block = await this.blocks.get(blockId);
+        if (!block) return false;
+
+        // Find previous sibling
+        const siblings = await this.blocks
+            .where({ pageId: block.pageId, parentId: block.parentId })
+            .sortBy('position');
+
+        const currentIndex = siblings.findIndex(b => b.id === blockId);
+        if (currentIndex <= 0) return false; // Can't indent if first
+
+        const previousSibling = siblings[currentIndex - 1];
+
+        // Add to previous sibling's children
+        const updatedChildIds = [...(previousSibling.childIds || []), blockId];
+        await this.blocks.update(previousSibling.id, { childIds: updatedChildIds });
+
+        // Update current block's parentId
+        await this.blocks.update(blockId, {
+            parentId: previousSibling.id,
+            position: updatedChildIds.length - 1
+        });
+
+        return true;
+    }
+
+    /**
+     * Outdent block (move to parent's level)
+     */
+    async outdentBlock(blockId) {
+        const block = await this.blocks.get(blockId);
+        if (!block || !block.parentId) return false;
+
+        const parent = await this.blocks.get(block.parentId);
+        if (!parent) return false;
+
+        // Remove from current parent's childIds
+        const updatedChildIds = parent.childIds.filter(id => id !== blockId);
+        await this.blocks.update(parent.id, { childIds: updatedChildIds });
+
+        // Move to grandparent level
+        await this.blocks.update(blockId, {
+            parentId: parent.parentId,
+            position: parent.position + 1
+        });
+
+        return true;
+    }
+
+    /**
+     * Reorder blocks
+     */
+    async reorderBlocks(pageId, parentId, blockIds) {
+        const updates = blockIds.map((id, index) => ({
+            key: id,
+            changes: { position: index }
+        }));
+
+        await this.blocks.bulkUpdate(updates);
+    }
+
+    /**
+     * Get page by ID
+     */
+    async getPage(pageId) {
+        return await this.pages.get(pageId);
+    }
+
+    /**
+     * Get all pages
+     */
+    async getAllPages() {
+        return await this.pages.toArray();
+    }
+
+    /**
+     * Update page
+     */
+    async updatePage(pageId, updates) {
+        return await this.pages.update(pageId, {
+            ...updates,
+            updatedAt: Date.now()
+        });
+    }
+
+    /**
+     * Delete page and all its blocks
+     */
+    async deletePage(pageId) {
+        // Delete all blocks
+        await this.blocks.where('pageId').equals(pageId).delete();
+
+        // Delete page
+        await this.pages.delete(pageId);
+        return true;
+    }
+
+    /**
+     * Export page to JSON (for backup/migration)
+     */
+    async exportPage(pageId) {
+        const page = await this.getPage(pageId);
+        const blocks = await this.getAllPageBlocks(pageId);
+
+        return {
+            page,
+            blocks
+        };
+    }
+
+    /**
+     * Import page from JSON
+     */
+    async importPage(data) {
+        const { page, blocks } = data;
+
+        // Create page
+        delete page.id; // Let DB generate new ID
+        const newPageId = await this.pages.add(page);
+
+        // Create blocks with ID mapping
+        const idMap = {};
+        for (const block of blocks) {
+            const oldId = block.id;
+            delete block.id;
+            block.pageId = newPageId;
+
+            // Update parentId if it references an old ID
+            if (block.parentId && idMap[block.parentId]) {
+                block.parentId = idMap[block.parentId];
+            }
+
+            const newId = await this.blocks.add(block);
+            idMap[oldId] = newId;
+        }
+
+        return newPageId;
+    }
+
+    /**
+     * Convert markdown file to blocks
+     */
+    async markdownToBlocks(pageId, markdown) {
+        const lines = markdown.split('\n');
+        let position = 0;
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue; // Skip empty lines
+
+            let type = 'text';
+            let content = trimmed;
+
+            // Detect block type
+            if (trimmed.startsWith('# ')) {
+                type = 'h1';
+                content = trimmed.substring(2);
+            } else if (trimmed.startsWith('## ')) {
+                type = 'h2';
+                content = trimmed.substring(3);
+            } else if (trimmed.startsWith('### ')) {
+                type = 'h3';
+                content = trimmed.substring(4);
+            } else if (trimmed.startsWith('- [ ] ') || trimmed.startsWith('- [x] ')) {
+                type = 'todo';
+                content = trimmed.substring(6);
+            } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                type = 'bullet';
+                content = trimmed.substring(2);
+            } else if (trimmed.match(/^\d+\. /)) {
+                type = 'numbered';
+                content = trimmed.replace(/^\d+\. /, '');
+            } else if (trimmed.startsWith('> ')) {
+                type = 'quote';
+                content = trimmed.substring(2);
+            } else if (trimmed.startsWith('```')) {
+                type = 'code';
+                content = trimmed.substring(3);
+            }
+
+            await this.createBlock(pageId, type, content, null, position++);
+        }
+    }
+
+    /**
+     * Convert blocks to markdown
+     */
+    async blocksToMarkdown(pageId) {
+        const blocks = await this.getAllPageBlocks(pageId);
+        let markdown = '';
+
+        for (const block of blocks) {
+            let line = '';
+
+            switch (block.type) {
+                case 'h1':
+                    line = `# ${block.content}`;
+                    break;
+                case 'h2':
+                    line = `## ${block.content}`;
+                    break;
+                case 'h3':
+                    line = `### ${block.content}`;
+                    break;
+                case 'todo':
+                    line = `- [ ] ${block.content}`;
+                    break;
+                case 'bullet':
+                    line = `- ${block.content}`;
+                    break;
+                case 'numbered':
+                    line = `1. ${block.content}`;
+                    break;
+                case 'quote':
+                    line = `> ${block.content}`;
+                    break;
+                case 'code':
+                    line = `\`\`\`${block.content}`;
+                    break;
+                default:
+                    line = block.content;
+            }
+
+            markdown += line + '\n';
+        }
+
+        return markdown;
+    }
+}
+
+// Create singleton instance
+const db = new BlocksDatabase();
+
+db;
+
+
+/**
+ * Block Component - Notion-style editable block
+ * Handles rendering, keyboard events, and block operations
+ */
+
+// Note: db is global, defined in blocks-db.js
+
+class Block {
+    constructor(blockData, pageId, onUpdate, onDelete, onCreateBelow, onFocusPrevious) {
+        this.id = blockData.id;
+        this.pageId = pageId;
+        this.type = blockData.type || 'text';
+        this.content = blockData.content || '';
+        this.properties = blockData.properties || {};
+        this.parentId = blockData.parentId;
+        this.childIds = blockData.childIds || [];
+        this.position = blockData.position || 0;
+
+        // Callbacks
+        this.onUpdate = onUpdate;
+        this.onDelete = onDelete;
+        this.onCreateBelow = onCreateBelow;
+        this.onFocusPrevious = onFocusPrevious;
+
+        // DOM element
+        this.element = null;
+        this.contentElement = null;
+
+        // State
+        this.isSlashMenuOpen = false;
+        this.slashMenuElement = null;
+    }
+
+    /**
+     * Render the block
+     */
+    render() {
+        const container = document.createElement('div');
+        container.className = 'block-container';
+        container.dataset.blockId = this.id;
+        container.dataset.blockType = this.type;
+
+        // Block handle (drag icon)
+        const handle = document.createElement('div');
+        handle.className = 'block-handle';
+        handle.innerHTML = '⋮⋮';
+        handle.draggable = true;
+
+        // Block content area
+        const contentArea = document.createElement('div');
+        contentArea.className = 'block-content-area';
+
+        // Render based on type
+        const content = this.renderContent();
+        contentArea.appendChild(content);
+
+        container.appendChild(handle);
+        container.appendChild(contentArea);
+
+        // Setup event listeners
+        this.setupEventListeners(content);
+
+        this.element = container;
+        this.contentElement = content;
+
+        return container;
+    }
+
+    /**
+     * Render content based on block type
+     */
+    renderContent() {
+        const element = document.createElement('div');
+        element.className = `block-content block-type-${this.type}`;
+        element.contentEditable = true;
+        element.setAttribute('data-placeholder', this.getPlaceholder());
+
+        // Add prefix for specific block types
+        if (this.type !== 'text') {
+            const prefix = document.createElement('span');
+            prefix.className = 'block-prefix';
+            prefix.contentEditable = false;
+            prefix.textContent = this.getPrefix();
+            element.appendChild(prefix);
+        }
+
+        // Add content
+        const textNode = document.createTextNode(this.content);
+        element.appendChild(textNode);
+
+        return element;
+    }
+
+    /**
+     * Get placeholder text for block type
+     */
+    getPlaceholder() {
+        const placeholders = {
+            text: "Type '/' for commands",
+            h1: 'Heading 1',
+            h2: 'Heading 2',
+            h3: 'Heading 3',
+            todo: 'To-do',
+            bullet: 'List',
+            numbered: 'Numbered list',
+            quote: 'Quote',
+            code: 'Code',
+            toggle: 'Toggle list'
+        };
+        return placeholders[this.type] || "Type '/' for commands";
+    }
+
+    /**
+     * Get prefix for block type
+     */
+    getPrefix() {
+        const prefixes = {
+            h1: '# ',
+            h2: '## ',
+            h3: '### ',
+            todo: '☐ ',
+            bullet: '• ',
+            numbered: '1. ',
+            quote: '❝ ',
+            toggle: '▶ '
+        };
+        return prefixes[this.type] || '';
+    }
+
+    /**
+     * Setup event listeners
+     */
+    setupEventListeners(content) {
+        // Input event for content updates
+        content.addEventListener('input', (e) => this.handleInput(e));
+
+        // Keydown for special keys
+        content.addEventListener('keydown', (e) => this.handleKeyDown(e));
+
+        // Paste event
+        content.addEventListener('paste', (e) => this.handlePaste(e));
+
+        // Focus/blur events
+        content.addEventListener('focus', () => this.handleFocus());
+        content.addEventListener('blur', () => this.handleBlur());
+    }
+
+    /**
+     * Handle input event
+     */
+    handleInput(e) {
+        const newContent = this.getTextContent();
+
+        // Check for slash command
+        if (newContent.startsWith('/') && !this.isSlashMenuOpen) {
+            this.openSlashMenu();
+        } else if (this.isSlashMenuOpen && !newContent.startsWith('/')) {
+            this.closeSlashMenu();
+        }
+
+        // Update content
+        this.content = newContent;
+        this.saveContent();
+
+        // Notify parent
+        if (this.onUpdate) {
+            this.onUpdate(this.id, { content: newContent });
+        }
+    }
+
+    /**
+     * Handle keydown events
+     */
+    handleKeyDown(e) {
+        // Enter key - create new block below
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+
+            if (this.isSlashMenuOpen) {
+                this.closeSlashMenu();
+            }
+
+            // Get cursor position
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const cursorOffset = range.startOffset;
+            const textContent = this.getTextContent();
+
+            // Split content at cursor
+            const beforeCursor = textContent.substring(0, cursorOffset);
+            const afterCursor = textContent.substring(cursorOffset);
+
+            // Update current block
+            this.content = beforeCursor;
+            this.setTextContent(beforeCursor);
+            this.saveContent();
+
+            // Create new block with remaining text
+            if (this.onCreateBelow) {
+                this.onCreateBelow(this.id, afterCursor);
+            }
+        }
+
+        // Backspace at start - delete block and merge with previous
+        else if (e.key === 'Backspace') {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+
+            if (range.startOffset === 0 && range.endOffset === 0) {
+                e.preventDefault();
+
+                const content = this.getTextContent();
+
+                // Delete this block
+                if (this.onDelete) {
+                    this.onDelete(this.id, content);
+                }
+            }
+        }
+
+        // Tab - indent block
+        else if (e.key === 'Tab') {
+            e.preventDefault();
+
+            if (e.shiftKey) {
+                // Shift+Tab - outdent
+                this.outdent();
+            } else {
+                // Tab - indent
+                this.indent();
+            }
+        }
+
+        // Arrow Up - focus previous block
+        else if (e.key === 'ArrowUp') {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+
+            // Only if at start of block
+            if (range.startOffset === 0) {
+                e.preventDefault();
+                if (this.onFocusPrevious) {
+                    this.onFocusPrevious(this.id);
+                }
+            }
+        }
+
+        // Escape - close slash menu
+        else if (e.key === 'Escape') {
+            if (this.isSlashMenuOpen) {
+                e.preventDefault();
+                this.closeSlashMenu();
+            }
+        }
+    }
+
+    /**
+     * Handle paste event
+     */
+    handlePaste(e) {
+        e.preventDefault();
+
+        // Get plain text from clipboard
+        const text = e.clipboardData.getData('text/plain');
+
+        // Insert at cursor
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(document.createTextNode(text));
+
+        // Move cursor to end of inserted text
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        // Trigger input event
+        this.contentElement.dispatchEvent(new Event('input'));
+    }
+
+    /**
+     * Handle focus
+     */
+    handleFocus() {
+        this.element.classList.add('block-focused');
+    }
+
+    /**
+     * Handle blur
+     */
+    handleBlur() {
+        this.element.classList.remove('block-focused');
+        this.saveContent();
+
+        // Close slash menu
+        if (this.isSlashMenuOpen) {
+            setTimeout(() => this.closeSlashMenu(), 200);
+        }
+    }
+
+    /**
+     * Get text content (without HTML)
+     */
+    getTextContent() {
+        let text = this.contentElement.textContent;
+
+        // Remove prefix if present
+        const prefix = this.getPrefix();
+        if (prefix && text.startsWith(prefix)) {
+            text = text.substring(prefix.length);
+        }
+
+        return text;
+    }
+
+    /**
+     * Set text content
+     */
+    setTextContent(text) {
+        // Clear content
+        while (this.contentElement.firstChild) {
+            this.contentElement.removeChild(this.contentElement.firstChild);
+        }
+
+        // Add prefix if needed
+        if (this.type !== 'text') {
+            const prefix = document.createElement('span');
+            prefix.className = 'block-prefix';
+            prefix.contentEditable = false;
+            prefix.textContent = this.getPrefix();
+            this.contentElement.appendChild(prefix);
+        }
+
+        // Add text
+        this.contentElement.appendChild(document.createTextNode(text));
+    }
+
+    /**
+     * Save content to database
+     */
+    async saveContent() {
+        await db.updateBlockContent(this.id, this.content);
+    }
+
+    /**
+     * Indent block
+     */
+    async indent() {
+        const success = await db.indentBlock(this.id);
+        if (success && this.onUpdate) {
+            this.onUpdate(this.id, { action: 'indent' });
+        }
+    }
+
+    /**
+     * Outdent block
+     */
+    async outdent() {
+        const success = await db.outdentBlock(this.id);
+        if (success && this.onUpdate) {
+            this.onUpdate(this.id, { action: 'outdent' });
+        }
+    }
+
+    /**
+     * Change block type
+     */
+    async changeType(newType) {
+        this.type = newType;
+        await db.updateBlockType(this.id, newType);
+
+        // Re-render
+        const newContent = this.renderContent();
+        this.contentElement.parentNode.replaceChild(newContent, this.contentElement);
+        this.contentElement = newContent;
+        this.setupEventListeners(newContent);
+
+        // Focus
+        this.focus();
+
+        if (this.onUpdate) {
+            this.onUpdate(this.id, { type: newType });
+        }
+    }
+
+    /**
+     * Focus this block
+     */
+    focus() {
+        this.contentElement.focus();
+
+        // Move cursor to end
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.selectNodeContents(this.contentElement);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    /**
+     * Open slash command menu
+     */
+    openSlashMenu() {
+        this.isSlashMenuOpen = true;
+
+        const menu = document.createElement('div');
+        menu.className = 'slash-menu';
+        menu.innerHTML = `
+            <div class="slash-menu-item" data-type="text">
+                <span class="slash-menu-icon">📝</span>
+                <div>
+                    <div class="slash-menu-title">Text</div>
+                    <div class="slash-menu-desc">Plain text</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" data-type="h1">
+                <span class="slash-menu-icon">H1</span>
+                <div>
+                    <div class="slash-menu-title">Heading 1</div>
+                    <div class="slash-menu-desc">Large heading</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" data-type="h2">
+                <span class="slash-menu-icon">H2</span>
+                <div>
+                    <div class="slash-menu-title">Heading 2</div>
+                    <div class="slash-menu-desc">Medium heading</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" data-type="h3">
+                <span class="slash-menu-icon">H3</span>
+                <div>
+                    <div class="slash-menu-title">Heading 3</div>
+                    <div class="slash-menu-desc">Small heading</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" data-type="todo">
+                <span class="slash-menu-icon">☐</span>
+                <div>
+                    <div class="slash-menu-title">To-do list</div>
+                    <div class="slash-menu-desc">Track tasks</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" data-type="bullet">
+                <span class="slash-menu-icon">•</span>
+                <div>
+                    <div class="slash-menu-title">Bulleted list</div>
+                    <div class="slash-menu-desc">Simple bullet list</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" data-type="numbered">
+                <span class="slash-menu-icon">1.</span>
+                <div>
+                    <div class="slash-menu-title">Numbered list</div>
+                    <div class="slash-menu-desc">Ordered list</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" data-type="quote">
+                <span class="slash-menu-icon">❝</span>
+                <div>
+                    <div class="slash-menu-title">Quote</div>
+                    <div class="slash-menu-desc">Quotation block</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" data-type="code">
+                <span class="slash-menu-icon">{ }</span>
+                <div>
+                    <div class="slash-menu-title">Code</div>
+                    <div class="slash-menu-desc">Code snippet</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" data-type="toggle">
+                <span class="slash-menu-icon">▶</span>
+                <div>
+                    <div class="slash-menu-title">Toggle list</div>
+                    <div class="slash-menu-desc">Collapsible content</div>
+                </div>
+            </div>
+        `;
+
+        // Position menu
+        const rect = this.contentElement.getBoundingClientRect();
+        menu.style.position = 'fixed';
+        menu.style.top = `${rect.bottom + 5}px`;
+        menu.style.left = `${rect.left}px`;
+
+        // Add click handlers
+        menu.querySelectorAll('.slash-menu-item').forEach(item => {
+            item.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                const type = item.dataset.type;
+
+                // Remove slash from content
+                const newContent = this.getTextContent().substring(1);
+                this.content = newContent;
+                this.setTextContent(newContent);
+
+                // Change type
+                this.changeType(type);
+
+                this.closeSlashMenu();
+            });
+        });
+
+        document.body.appendChild(menu);
+        this.slashMenuElement = menu;
+    }
+
+    /**
+     * Close slash command menu
+     */
+    closeSlashMenu() {
+        if (this.slashMenuElement) {
+            this.slashMenuElement.remove();
+            this.slashMenuElement = null;
+        }
+        this.isSlashMenuOpen = false;
+    }
+
+    /**
+     * Destroy block
+     */
+    destroy() {
+        this.closeSlashMenu();
+        if (this.element && this.element.parentNode) {
+            this.element.parentNode.removeChild(this.element);
+        }
+    }
+}
+
+
+/**
+ * Block Editor - Manages collection of blocks for a page
+ * Main editor component for Notion-style block editing
+ */
+
+// Note: db and Block are global, defined in blocks-db.js and block.js
+
+class BlockEditor {
+    constructor(container) {
+        this.container = container;
+        this.pageId = null;
+        this.blocks = new Map(); // blockId -> Block instance
+        this.blockElements = new Map(); // blockId -> DOM element
+
+        // Callbacks
+        this.onPageUpdate = null;
+        this.onBlockUpdate = null;
+    }
+
+    /**
+     * Initialize editor with a page
+     */
+    async init(pageId) {
+        this.pageId = pageId;
+
+        // Clear existing
+        this.clearBlocks();
+
+        // Load page
+        const page = await db.getPage(pageId);
+        if (!page) {
+            throw new Error('Page not found');
+        }
+
+        // Render editor UI
+        this.render(page);
+
+        // Load and render blocks
+        await this.loadBlocks();
+    }
+
+    /**
+     * Render editor UI
+     */
+    render(page) {
+        this.container.innerHTML = '';
+        this.container.className = 'block-editor';
+
+        // Title
+        const titleEl = document.createElement('div');
+        titleEl.className = 'block-editor-title';
+        titleEl.contentEditable = true;
+        titleEl.textContent = page.title;
+        titleEl.addEventListener('input', (e) => {
+            this.updatePageTitle(e.target.textContent);
+        });
+        titleEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Focus first block
+                const firstBlock = this.blocks.values().next().value;
+                if (firstBlock) {
+                    firstBlock.focus();
+                }
+            }
+        });
+
+        // Blocks container
+        const blocksContainer = document.createElement('div');
+        blocksContainer.className = 'block-editor-blocks';
+        blocksContainer.id = 'blocksContainer';
+
+        this.container.appendChild(titleEl);
+        this.container.appendChild(blocksContainer);
+
+        this.blocksContainer = blocksContainer;
+    }
+
+    /**
+     * Load blocks from database
+     */
+    async loadBlocks() {
+        const blocks = await db.getPageBlocks(this.pageId);
+
+        if (blocks.length === 0) {
+            // Create initial empty block
+            await db.createBlock(this.pageId, 'text', '', null, 0);
+            await this.loadBlocks();
+            return;
+        }
+
+        // Render blocks
+        for (const blockData of blocks) {
+            await this.renderBlock(blockData);
+        }
+    }
+
+    /**
+     * Render a single block
+     */
+    async renderBlock(blockData, position = null) {
+        const block = new Block(
+            blockData,
+            this.pageId,
+            (blockId, updates) => this.handleBlockUpdate(blockId, updates),
+            (blockId, content) => this.handleBlockDelete(blockId, content),
+            (blockId, content) => this.handleCreateBlockBelow(blockId, content),
+            (blockId) => this.handleFocusPrevious(blockId)
+        );
+
+        const element = block.render();
+
+        // Add to container at position
+        if (position !== null && position < this.blocksContainer.children.length) {
+            this.blocksContainer.insertBefore(element, this.blocksContainer.children[position]);
+        } else {
+            this.blocksContainer.appendChild(element);
+        }
+
+        // Store references
+        this.blocks.set(blockData.id, block);
+        this.blockElements.set(blockData.id, element);
+
+        return block;
+    }
+
+    /**
+     * Handle block update
+     */
+    async handleBlockUpdate(blockId, updates) {
+        if (updates.action === 'indent' || updates.action === 'outdent') {
+            // Reload blocks to reflect hierarchy changes
+            await this.reloadBlocks();
+        }
+
+        if (this.onBlockUpdate) {
+            this.onBlockUpdate(blockId, updates);
+        }
+    }
+
+    /**
+     * Handle block delete
+     */
+    async handleBlockDelete(blockId, content) {
+        // Find previous block
+        const blocksArray = Array.from(this.blocks.values());
+        const currentIndex = blocksArray.findIndex(b => b.id === blockId);
+
+        if (currentIndex > 0) {
+            const previousBlock = blocksArray[currentIndex - 1];
+
+            // Append content to previous block
+            if (content) {
+                previousBlock.content += content;
+                previousBlock.setTextContent(previousBlock.content);
+                await previousBlock.saveContent();
+            }
+
+            // Focus previous block
+            previousBlock.focus();
+        }
+
+        // Delete from database
+        await db.deleteBlock(blockId);
+
+        // Remove from UI
+        const block = this.blocks.get(blockId);
+        if (block) {
+            block.destroy();
+        }
+        this.blocks.delete(blockId);
+        this.blockElements.delete(blockId);
+    }
+
+    /**
+     * Handle create block below
+     */
+    async handleCreateBlockBelow(blockId, content = '') {
+        const currentBlock = this.blocks.get(blockId);
+        if (!currentBlock) return;
+
+        // Get position of current block
+        const blocksArray = Array.from(this.blocks.values());
+        const currentIndex = blocksArray.findIndex(b => b.id === blockId);
+        const newPosition = currentIndex + 1;
+
+        // Create new block in database
+        const newBlockId = await db.createBlock(
+            this.pageId,
+            'text',
+            content,
+            currentBlock.parentId,
+            newPosition
+        );
+
+        // Get new block data
+        const newBlockData = await db.blocks.get(newBlockId);
+
+        // Render new block
+        const newBlock = await this.renderBlock(newBlockData, newPosition);
+
+        // Focus new block
+        newBlock.focus();
+
+        // Update positions of blocks below
+        await this.updateBlockPositions();
+    }
+
+    /**
+     * Handle focus previous block
+     */
+    handleFocusPrevious(blockId) {
+        const blocksArray = Array.from(this.blocks.values());
+        const currentIndex = blocksArray.findIndex(b => b.id === blockId);
+
+        if (currentIndex > 0) {
+            const previousBlock = blocksArray[currentIndex - 1];
+            previousBlock.focus();
+        }
+    }
+
+    /**
+     * Update block positions
+     */
+    async updateBlockPositions() {
+        const blocksArray = Array.from(this.blocks.values());
+        const updates = blocksArray.map((block, index) => ({
+            key: block.id,
+            changes: { position: index }
+        }));
+
+        if (updates.length > 0) {
+            await db.blocks.bulkUpdate(updates);
+        }
+    }
+
+    /**
+     * Reload all blocks
+     */
+    async reloadBlocks() {
+        this.clearBlocks();
+        await this.loadBlocks();
+    }
+
+    /**
+     * Clear all blocks
+     */
+    clearBlocks() {
+        // Destroy all block instances
+        this.blocks.forEach(block => block.destroy());
+        this.blocks.clear();
+        this.blockElements.clear();
+
+        // Clear container
+        if (this.blocksContainer) {
+            this.blocksContainer.innerHTML = '';
+        }
+    }
+
+    /**
+     * Update page title
+     */
+    async updatePageTitle(title) {
+        await db.updatePage(this.pageId, { title });
+
+        if (this.onPageUpdate) {
+            this.onPageUpdate({ title });
+        }
+    }
+
+    /**
+     * Export page to markdown
+     */
+    async exportToMarkdown() {
+        return await db.blocksToMarkdown(this.pageId);
+    }
+
+    /**
+     * Import from markdown
+     */
+    async importFromMarkdown(markdown) {
+        // Clear existing blocks
+        const existingBlocks = await db.getAllPageBlocks(this.pageId);
+        for (const block of existingBlocks) {
+            await db.deleteBlock(block.id);
+        }
+
+        // Convert markdown to blocks
+        await db.markdownToBlocks(this.pageId, markdown);
+
+        // Reload
+        await this.reloadBlocks();
+    }
+
+    /**
+     * Get page data
+     */
+    async getPageData() {
+        return await db.exportPage(this.pageId);
+    }
+
+    /**
+     * Destroy editor
+     */
+    destroy() {
+        this.clearBlocks();
+        this.container.innerHTML = '';
+        this.pageId = null;
     }
 }
 
