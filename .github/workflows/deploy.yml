@@ -1,0 +1,48 @@
+name: Deploy MDNotes Pro
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Build application
+      run: |
+        npm run build
+
+    - name: Verify build
+      run: |
+        if [ ! -f "dist/index.html" ]; then
+          echo "Build failed: dist/index.html not found"
+          exit 1
+        fi
+        echo "Build successful!"
+        ls -lh dist/
+
+    - name: Copy to root for GitHub Pages
+      run: |
+        cp dist/index.html index.html
+
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
+        publish_branch: gh-pages
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        commit_message: 'Deploy MDNotes Pro v2.1.0'

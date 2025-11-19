@@ -1,6 +1,6 @@
 {
   "name": "mdnotes",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Professional modular Markdown editor with presentation, mindmap, and diagram support",
   "main": "dist/index.html",
   "scripts": {
@@ -16,10 +16,16 @@
     "mindmap",
     "diagrams",
     "reveal.js",
-    "codemirror"
+    "codemirror",
+    "offline",
+    "interactive"
   ],
   "author": "MDNotes Team",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paulingjini/mdnotes"
+  },
   "devDependencies": {},
   "dependencies": {}
 }
