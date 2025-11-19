@@ -9646,6 +9646,12 @@ class MDNotesApp {
      * Show confirmation dialog (shadcn-style)
      */
     showConfirmDialog(title, message, onConfirm) {
+        // Validate parameters
+        if (!title || !message) {
+            console.error('showConfirmDialog called with invalid parameters:', { title, message });
+            return;
+        }
+
         const modal = document.createElement('div');
         modal.className = 'modal show';
         modal.innerHTML = `
@@ -9975,8 +9981,24 @@ class MDNotesApp {
 
 // Initialize app when DOM is ready
 window.addEventListener('DOMContentLoaded', async () => {
-    window.app = new MDNotesApp();
-    await window.app.init();
+    try {
+        window.app = new MDNotesApp();
+        await window.app.init();
+    } catch (error) {
+        console.error('Failed to initialize MDNotes Pro:', error);
+        console.error('Stack trace:', error.stack);
+
+        // Show user-friendly error message
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #a80000; color: white; padding: 30px; border-radius: 8px; max-width: 500px; z-index: 10000; font-family: system-ui;';
+        errorDiv.innerHTML = `
+            <h2 style="margin: 0 0 15px 0;">⚠️ Initialization Error</h2>
+            <p style="margin: 0 0 15px 0;">MDNotes Pro failed to start. Please check the browser console (F12) for details.</p>
+            <p style="margin: 0; font-size: 12px; opacity: 0.8;">${error.message}</p>
+            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: white; color: #a80000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Reload Page</button>
+        `;
+        document.body.appendChild(errorDiv);
+    }
 });
 
 MDNotesApp;
