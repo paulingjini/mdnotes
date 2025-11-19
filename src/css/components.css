@@ -293,13 +293,34 @@ body[data-toolbar-style="icon-text"] .toolbar-btn {
 .file-item.dragging {
     opacity: 0.5;
     background: var(--bg-tertiary);
+    cursor: move;
 }
 
 .folder-item.drag-over {
     background: var(--accent);
     border-color: var(--accent);
-    color: white;
+    color: white !important;
     box-shadow: 0 0 0 2px var(--accent);
+    transition: all 0.2s ease;
+    cursor: copy;
+}
+
+.folder-item.drag-over * {
+    color: white !important;
+}
+
+/* Cursor styles for dragging */
+.folder-item[draggable="true"]:hover {
+    cursor: grab;
+}
+
+.file-item[draggable="true"]:hover {
+    cursor: grab;
+}
+
+.folder-item[draggable="true"]:active,
+.file-item[draggable="true"]:active {
+    cursor: grabbing;
 }
 
 .folder-count {

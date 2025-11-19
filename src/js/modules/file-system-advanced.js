@@ -352,13 +352,30 @@ export class AdvancedFileSystem {
         });
 
         // Drag & drop for folders
+        let dragCounter = 0; // Counter to handle dragleave properly
+
+        folderEl.ondragenter = (e) => {
+            e.preventDefault();
+            dragCounter++;
+
+            // Check if we're dragging this folder onto itself
+            const sourceFolderId = e.dataTransfer.types.includes('folderId')
+                ? folderEl.dataset.folderId
+                : null;
+
+            if (sourceFolderId !== node.id) {
+                folderEl.classList.add('drag-over');
+            }
+        };
+
         folderEl.ondragover = (e) => {
             e.preventDefault();
-            folderEl.classList.add('drag-over');
+            e.dataTransfer.dropEffect = 'move';
         };
 
         folderEl.ondragleave = (e) => {
-            if (e.target === folderEl) {
+            dragCounter--;
+            if (dragCounter === 0) {
                 folderEl.classList.remove('drag-over');
             }
         };
@@ -366,6 +383,7 @@ export class AdvancedFileSystem {
         folderEl.ondrop = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            dragCounter = 0;
             folderEl.classList.remove('drag-over');
 
             const filename = e.dataTransfer.getData('filename');
