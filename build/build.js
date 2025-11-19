@@ -23,6 +23,7 @@ console.log('🎨 Processing CSS...');
 const cssFiles = [
     'variables.css',
     'base.css',
+    'shadcn.css',
     'components.css',
     'modals.css'
 ];

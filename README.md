@@ -2,62 +2,103 @@
 
 > Professional Markdown Editor with Advanced Presentation & Visualization Capabilities
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
+![Status](https://img.shields.io/badge/status-production%20ready-success.svg)
+
+**🎉 NEW in v2.1.0**: Hierarchical file system, bidirectional editing, interactive tables, smart task lists, timeline visualization, and offline support!
+
+## 🌟 What's New in v2.1.0
+
+- 🗂️ **Hierarchical File System** - Notion-like folders, tags, favorites, and archive
+- 🔄 **Bidirectional Editing** - Click preview to jump to editor source
+- 🎯 **Mindmap Focus** - Active node highlighting with animations
+- 📊 **Interactive Tables** - Sort, filter, and export to CSV
+- ✅ **Smart Task Lists** - Checkboxes with progress bars
+- 📅 **Timeline Visualization** - Beautiful timesheet.js timelines
+- 💾 **Offline Support** - Local library management for full offline capability
+- 📚 **Enhanced Documentation** - Complete deployment and usage guides
+
+[📖 See Full Release Notes](RELEASE.md) | [📋 View Changelog](CHANGELOG.md)
 
 ## ✨ Features
 
-### Editor
+### 🗂️ File Management
+- **Hierarchical Folders** - Organize files in nested folder structure
+- **Smart Tags** - Auto-colored tags for categorization
+- **Favorites & Archive** - Quick access to important files
+- **Advanced Search** - Filter by folder, tag, or status
+- **Multi-file Support** - Work with multiple documents
+- **Auto-save** - Never lose your work
+
+### ✍️ Editor
 - **CodeMirror Integration** - Professional code editing with syntax highlighting
 - **Markdown Toolbar** - Quick formatting buttons
-- **Auto-save** - Never lose your work
-- **Multi-file Management** - Work with multiple documents
-- **Keyboard Shortcuts** - Efficient editing workflow
+- **Keyboard Shortcuts** - Efficient editing workflow (Ctrl+B/I/K/S/N)
 - **Fullscreen Mode** - Distraction-free writing
+- **Text Statistics** - Lines, words, and character count
+- **Cursor Tracking** - Synchronized across all panels
 
-### Preview
+### 👁️ Preview
 - **Live Rendering** - Real-time markdown preview
+- **Bidirectional Editing** - Click to jump to source
 - **Syntax Highlighting** - Code blocks with highlight.js
 - **Mermaid Diagrams** - Flowcharts, sequences, Gantt charts
 - **Chart.js Integration** - Data visualization
-- **Responsive Design** - Looks great on all screens
+- **Interactive Tables** - Sort, filter, export to CSV
+- **Smart Task Lists** - Checkboxes with progress tracking
+- **Timeline Visualization** - Timesheet.js timelines
 - **Fullscreen Mode** - Focus on your content
 
-### Presentations
+### 🎤 Presentations
 - **Reveal.js Powered** - Professional slide presentations
+- **JSON Templates** - 4 customizable templates (corporate/modern/academic/startup)
+- **Full Customization** - Colors, fonts, logo, footer
 - **Multiple Themes** - 10+ built-in themes
 - **Content Auto-fitting** - Slides adjust to content
 - **Fullscreen Mode** - Present like a pro
 - **Export to PDF** - Save slides as PDF
-- **Export to PowerPoint** - PPTX format support
+- **Export to PowerPoint** - PPTX with template support
 
-### Mindmap
+### 🧠 Mindmap
 - **Auto-generation** - From document headings
+- **Active Node Focus** - Highlight current node with animations
 - **Interactive** - Pan, zoom, explore
+- **Synchronized** - Tracks cursor position in editor
 - **Export SVG/PNG** - Save visualizations
 - **Fullscreen Mode** - Better visualization
 
-### Export Formats
+### 📤 Export Formats
 - **.md** - Markdown
 - **.html** - Standalone HTML
-- **.pdf** - Preview & Slides
-- **.pptx** - PowerPoint presentation
+- **.pdf** - Preview & Slides (programmatic generation)
+- **.docx** - Microsoft Word (programmatic generation)
+- **.pptx** - PowerPoint with template support
+- **.csv** - Tables export
+- **.svg/.png** - Mindmap export
 
-### Diagrams & Visualizations
+### 📊 Diagrams & Visualizations
 - **Mermaid Flowcharts** - Process diagrams
 - **Sequence Diagrams** - Interaction flows
 - **Gantt Charts** - Project timelines
 - **Timeline Diagrams** - Historical events
 - **Journey Maps** - User journeys
-- **Chart.js Charts** - Bar, line, pie, and more
+- **Timesheet Timelines** - Visual project timelines with JSON
+- **Chart.js Charts** - Bar, line, pie, doughnut, radar, and more
 
-### Themes
-- Dark (default)
-- Light
-- Dracula
-- Nord
-- Monokai
+### 🎨 Themes
+- **Dark** (default) - Professional dark theme
+- **Light** - Clean light theme
+- **Dracula** - Popular developer theme
+- **Nord** - Arctic color palette
+- **Monokai** - Classic code editor theme
+
+### 💾 Offline Support
+- **Local Libraries** - Download all dependencies locally
+- **No CDN Required** - Works completely offline
+- **npm Script** - `npm run download-libs` to vendor libraries
+- **6-8 MB Total** - All 27 libraries included
 
 ## 🚀 Quick Start
 

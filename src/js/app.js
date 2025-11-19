@@ -422,6 +422,48 @@ class MDNotesApp {
     }
 
     /**
+     * Show confirmation dialog (shadcn-style)
+     */
+    showConfirmDialog(title, message, onConfirm) {
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.innerHTML = `
+            <div class="dialog-overlay" onclick="this.closest('.modal').remove()"></div>
+            <div class="dialog-content">
+                <div class="dialog-header">
+                    <div class="dialog-title">${title}</div>
+                    <button class="icon-btn" onclick="this.closest('.modal').remove()">✕</button>
+                </div>
+                <div style="padding: 24px; padding-top: 0;">
+                    <p style="color: var(--text-secondary);">${message}</p>
+                </div>
+                <div class="dialog-footer">
+                    <button class="btn-shadcn btn-outline btn-md" onclick="this.closest('.modal').remove()">Cancel</button>
+                    <button class="btn-shadcn btn-destructive btn-md" id="confirmBtn">Confirm</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Handle confirm
+        const confirmBtn = modal.querySelector('#confirmBtn');
+        confirmBtn.onclick = () => {
+            onConfirm();
+            modal.remove();
+        };
+
+        // Handle escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                modal.remove();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    }
+
+    /**
      * Modal handlers
      */
     showNewFileModal() {
