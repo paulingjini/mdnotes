@@ -673,6 +673,24 @@ class MDNotesApp {
             this.syncManager.scrollToHeading(headingText);
         }
     }
+
+    /**
+     * Mindmap Focus Methods
+     */
+    toggleMindmapFocus() {
+        if (this.mindmap) {
+            const newState = this.mindmap.toggleFocus();
+            this.showNotification(`Mindmap focus ${newState ? 'enabled' : 'disabled'}`, 'success');
+            return newState;
+        }
+        return false;
+    }
+
+    focusMindmapNode(nodeIndex) {
+        if (this.mindmap) {
+            this.mindmap.highlightNode(nodeIndex);
+        }
+    }
 }
 
 // Initialize app when DOM is ready

@@ -641,6 +641,25 @@ body[data-toolbar-style="icon-text"] .toolbar-btn {
     height: 100%;
 }
 
+/* Mindmap active node highlighting */
+.mindmap-active-node {
+    stroke: var(--accent) !important;
+    stroke-width: 4px !important;
+    filter: drop-shadow(0 0 8px var(--accent));
+    animation: mindmapPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes mindmapPulse {
+    0%, 100% {
+        stroke-width: 4px;
+        opacity: 1;
+    }
+    50% {
+        stroke-width: 6px;
+        opacity: 0.8;
+    }
+}
+
 /* Status Bar */
 .status-bar {
     background: var(--bg-secondary);
@@ -684,6 +703,33 @@ select {
 
 .sync-highlight:hover {
     background: rgba(0, 122, 204, 0.15);
+}
+
+/* Bidirectional Editing */
+.editable-element {
+    cursor: pointer;
+    transition: background-color 0.2s, padding-left 0.2s;
+    border-radius: 4px;
+}
+
+.editable-element:hover {
+    background-color: rgba(0, 122, 204, 0.08);
+    padding-left: 8px;
+}
+
+.editable-element:active {
+    background-color: rgba(0, 122, 204, 0.15);
+}
+
+/* Editor line highlight (for CodeMirror) */
+.editor-highlight-line {
+    background-color: rgba(0, 122, 204, 0.2) !important;
+    animation: fadeHighlight 2s ease-out;
+}
+
+@keyframes fadeHighlight {
+    0% { background-color: rgba(0, 122, 204, 0.3); }
+    100% { background-color: rgba(0, 122, 204, 0.1); }
 }
 
 
@@ -2687,6 +2733,16 @@ class Preview {
                 }
             }));
         }
+
+        // Custom renderer for bidirectional editing
+        this.setupBidirectionalRenderer();
+    }
+
+    /**
+     * Setup custom renderer for line tracking
+     */
+    setupBidirectionalRenderer() {
+        // This will be handled in parseWithLineNumbers method
     }
 
     /**
@@ -2696,8 +2752,11 @@ class Preview {
         if (!this.container || !window.marked) return;
 
         try {
-            // Parse markdown
-            let html = marked.parse(markdown || '');
+            // Create line mapping
+            this.createLineMapping(markdown);
+
+            // Parse markdown with custom renderer
+            let html = this.parseWithLineNumbers(markdown);
 
             // Process chart blocks
             html = this.processCharts(html);
@@ -2715,10 +2774,103 @@ class Preview {
             // Render chart.js charts
             this.renderCharts();
 
+            // Setup click handlers for bidirectional editing
+            this.setupBidirectionalHandlers();
+
         } catch (error) {
             console.error('Preview render error:', error);
             this.container.innerHTML = `<p style="color: red;">Error rendering preview: ${error.message}</p>`;
         }
+    }
+
+    /**
+     * Create line mapping from markdown
+     */
+    createLineMapping(markdown) {
+        const lines = markdown.split('\n');
+        this.lineMapping = {};
+
+        lines.forEach((line, index) => {
+            const trimmed = line.trim();
+            if (trimmed) {
+                // Store line number for non-empty lines
+                this.lineMapping[trimmed.substring(0, 50)] = index;
+            }
+        });
+    }
+
+    /**
+     * Parse markdown with line number tracking
+     */
+    parseWithLineNumbers(markdown) {
+        const lines = markdown.split('\n');
+        let html = marked.parse(markdown);
+
+        // Post-process HTML to add line numbers and editable class
+        // Find text content in HTML and match it back to source lines
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+
+        const elements = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, blockquote');
+
+        elements.forEach(element => {
+            const text = element.textContent.trim();
+            if (text) {
+                // Find the line number in the source
+                const lineNumber = this.findLineNumber(text, lines);
+                if (lineNumber !== -1) {
+                    element.setAttribute('data-source-line', lineNumber);
+                    element.classList.add('editable-element');
+                }
+            }
+        });
+
+        return tempDiv.innerHTML;
+    }
+
+    /**
+     * Find line number for given text in source
+     */
+    findLineNumber(text, lines) {
+        // Try exact match first
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].trim() === text || lines[i].includes(text.substring(0, 30))) {
+                return i;
+            }
+        }
+
+        // Try fuzzy match (removing markdown syntax)
+        const cleanText = text.replace(/[*_`#]/g, '').trim();
+        for (let i = 0; i < lines.length; i++) {
+            const cleanLine = lines[i].replace(/[*_`#]/g, '').trim();
+            if (cleanLine.includes(cleanText.substring(0, 30))) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Setup bidirectional click handlers
+     */
+    setupBidirectionalHandlers() {
+        if (!this.container) return;
+
+        const editableElements = this.container.querySelectorAll('.editable-element');
+
+        editableElements.forEach(element => {
+            element.style.cursor = 'pointer';
+            element.title = 'Click to jump to editor';
+
+            element.addEventListener('click', (e) => {
+                const sourceLine = element.getAttribute('data-source-line');
+                if (sourceLine !== null && this.onElementClick) {
+                    e.stopPropagation();
+                    this.onElementClick(parseInt(sourceLine));
+                }
+            });
+        });
     }
 
     /**
@@ -2848,6 +3000,9 @@ class Mindmap {
         this.container = null;
         this.instance = null;
         this.isFullscreen = false;
+        this.focusEnabled = true;
+        this.currentFocusNode = null;
+        this.nodes = [];
     }
 
     /**
@@ -2920,9 +3075,129 @@ class Mindmap {
             this.instance = window.markmap.Markmap.create(svg.node(), null, root);
             this.instance.fit();
 
+            // Store nodes for focus management
+            this.extractNodes(root);
+
+            // Apply focus if enabled
+            if (this.focusEnabled && this.currentFocusNode !== null) {
+                this.highlightNode(this.currentFocusNode);
+            }
+
         } catch (error) {
             console.error('Mindmap render error:', error);
             this.container.innerHTML = `<div style="text-align:center;padding:50px;color:var(--text-secondary)">Error: ${error.message}</div>`;
+        }
+    }
+
+    /**
+     * Extract all nodes from mindmap tree for indexing
+     */
+    extractNodes(node, depth = 0, index = [0]) {
+        if (!node) return;
+
+        this.nodes = this.nodes || [];
+        node.nodeIndex = index[0]++;
+        this.nodes.push({
+            index: node.nodeIndex,
+            depth: depth,
+            content: node.content,
+            node: node
+        });
+
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(child => {
+                this.extractNodes(child, depth + 1, index);
+            });
+        }
+    }
+
+    /**
+     * Highlight a specific node by index
+     */
+    highlightNode(nodeIndex) {
+        if (!this.instance || !this.focusEnabled) return;
+
+        this.currentFocusNode = nodeIndex;
+
+        // Remove previous highlights
+        const svg = this.container.querySelector('svg');
+        if (!svg) return;
+
+        // Remove all existing highlights
+        svg.querySelectorAll('.mindmap-active-node').forEach(el => {
+            el.classList.remove('mindmap-active-node');
+        });
+
+        // Find and highlight the target node
+        const circles = svg.querySelectorAll('circle');
+        if (circles[nodeIndex]) {
+            circles[nodeIndex].classList.add('mindmap-active-node');
+
+            // Scroll to node if needed
+            const node = circles[nodeIndex];
+            const bbox = node.getBBox();
+            const ctm = node.getCTM();
+
+            if (ctm) {
+                const x = bbox.x + ctm.e;
+                const y = bbox.y + ctm.f;
+
+                // Center the node in view (using markmap's pan/zoom)
+                if (this.instance.svg) {
+                    // Markmap uses d3 zoom, we can access it
+                    const zoom = window.d3.zoom();
+                    const svg = window.d3.select(this.container.querySelector('svg'));
+
+                    // Calculate transform to center node
+                    const width = this.container.clientWidth;
+                    const height = this.container.clientHeight;
+                    const scale = 1;
+                    const translateX = width / 2 - x * scale;
+                    const translateY = height / 2 - y * scale;
+
+                    // Apply transform smoothly
+                    svg.transition()
+                        .duration(500)
+                        .call(zoom.transform, window.d3.zoomIdentity.translate(translateX, translateY).scale(scale));
+                }
+            }
+        }
+    }
+
+    /**
+     * Toggle focus feature
+     */
+    toggleFocus() {
+        this.focusEnabled = !this.focusEnabled;
+
+        if (!this.focusEnabled) {
+            // Remove all highlights
+            const svg = this.container?.querySelector('svg');
+            if (svg) {
+                svg.querySelectorAll('.mindmap-active-node').forEach(el => {
+                    el.classList.remove('mindmap-active-node');
+                });
+            }
+        } else if (this.currentFocusNode !== null) {
+            // Restore highlight
+            this.highlightNode(this.currentFocusNode);
+        }
+
+        return this.focusEnabled;
+    }
+
+    /**
+     * Set focus on specific heading by text
+     */
+    focusOnHeading(headingText) {
+        if (!this.focusEnabled) return;
+
+        const nodeInfo = this.nodes.find(n =>
+            n.content && n.content.toLowerCase().includes(headingText.toLowerCase())
+        );
+
+        if (nodeInfo) {
+            this.highlightNode(nodeInfo.index);
         }
     }
 
@@ -4447,7 +4722,57 @@ class SyncManager {
     init() {
         this.setupEditorSync();
         this.setupPreviewSync();
+        this.setupBidirectionalSync();
         console.log('Sync manager initialized');
+    }
+
+    /**
+     * Setup bidirectional editing (preview to editor)
+     */
+    setupBidirectionalSync() {
+        if (this.preview) {
+            // Set callback for preview element clicks
+            this.preview.onElementClick = (lineNumber) => {
+                this.jumpToLine(lineNumber);
+            };
+        }
+    }
+
+    /**
+     * Jump to specific line in editor
+     */
+    jumpToLine(lineNumber) {
+        if (!this.editor || !this.editor.cm) return;
+
+        // Scroll to line
+        this.editor.cm.scrollIntoView({ line: lineNumber, ch: 0 }, 200);
+
+        // Set cursor to that line
+        this.editor.cm.setCursor({ line: lineNumber, ch: 0 });
+
+        // Focus the editor
+        this.editor.cm.focus();
+
+        // Highlight the line temporarily
+        this.highlightEditorLine(lineNumber);
+    }
+
+    /**
+     * Highlight a line in the editor temporarily
+     */
+    highlightEditorLine(lineNumber) {
+        if (!this.editor || !this.editor.cm) return;
+
+        const lineHandle = this.editor.cm.getLineHandle(lineNumber);
+        if (!lineHandle) return;
+
+        // Add temporary highlight class
+        this.editor.cm.addLineClass(lineNumber, 'background', 'editor-highlight-line');
+
+        // Remove after 2 seconds
+        setTimeout(() => {
+            this.editor.cm.removeLineClass(lineNumber, 'background', 'editor-highlight-line');
+        }, 2000);
     }
 
     /**
@@ -4600,11 +4925,9 @@ class SyncManager {
      * Highlight node in mindmap
      */
     highlightMindmapNode(nodeIndex) {
-        // This is a placeholder - actual implementation depends on markmap API
-        // Could be enhanced to highlight specific nodes
-        if (this.mindmap.instance) {
-            // Markmap highlighting would go here
-            console.log('Highlighting mindmap node:', nodeIndex);
+        if (this.mindmap && this.mindmap.instance && this.mindmap.focusEnabled) {
+            // Highlight the node using the new focus feature
+            this.mindmap.highlightNode(nodeIndex);
         }
     }
 
@@ -5622,6 +5945,24 @@ class MDNotesApp {
     scrollToHeading(headingText) {
         if (this.syncManager) {
             this.syncManager.scrollToHeading(headingText);
+        }
+    }
+
+    /**
+     * Mindmap Focus Methods
+     */
+    toggleMindmapFocus() {
+        if (this.mindmap) {
+            const newState = this.mindmap.toggleFocus();
+            this.showNotification(`Mindmap focus ${newState ? 'enabled' : 'disabled'}`, 'success');
+            return newState;
+        }
+        return false;
+    }
+
+    focusMindmapNode(nodeIndex) {
+        if (this.mindmap) {
+            this.mindmap.highlightNode(nodeIndex);
         }
     }
 }

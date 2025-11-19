@@ -485,6 +485,25 @@ body[data-toolbar-style="icon-text"] .toolbar-btn {
     height: 100%;
 }
 
+/* Mindmap active node highlighting */
+.mindmap-active-node {
+    stroke: var(--accent) !important;
+    stroke-width: 4px !important;
+    filter: drop-shadow(0 0 8px var(--accent));
+    animation: mindmapPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes mindmapPulse {
+    0%, 100% {
+        stroke-width: 4px;
+        opacity: 1;
+    }
+    50% {
+        stroke-width: 6px;
+        opacity: 0.8;
+    }
+}
+
 /* Status Bar */
 .status-bar {
     background: var(--bg-secondary);
@@ -528,4 +547,31 @@ select {
 
 .sync-highlight:hover {
     background: rgba(0, 122, 204, 0.15);
+}
+
+/* Bidirectional Editing */
+.editable-element {
+    cursor: pointer;
+    transition: background-color 0.2s, padding-left 0.2s;
+    border-radius: 4px;
+}
+
+.editable-element:hover {
+    background-color: rgba(0, 122, 204, 0.08);
+    padding-left: 8px;
+}
+
+.editable-element:active {
+    background-color: rgba(0, 122, 204, 0.15);
+}
+
+/* Editor line highlight (for CodeMirror) */
+.editor-highlight-line {
+    background-color: rgba(0, 122, 204, 0.2) !important;
+    animation: fadeHighlight 2s ease-out;
+}
+
+@keyframes fadeHighlight {
+    0% { background-color: rgba(0, 122, 204, 0.3); }
+    100% { background-color: rgba(0, 122, 204, 0.1); }
 }

@@ -17,7 +17,57 @@ export class SyncManager {
     init() {
         this.setupEditorSync();
         this.setupPreviewSync();
+        this.setupBidirectionalSync();
         console.log('Sync manager initialized');
+    }
+
+    /**
+     * Setup bidirectional editing (preview to editor)
+     */
+    setupBidirectionalSync() {
+        if (this.preview) {
+            // Set callback for preview element clicks
+            this.preview.onElementClick = (lineNumber) => {
+                this.jumpToLine(lineNumber);
+            };
+        }
+    }
+
+    /**
+     * Jump to specific line in editor
+     */
+    jumpToLine(lineNumber) {
+        if (!this.editor || !this.editor.cm) return;
+
+        // Scroll to line
+        this.editor.cm.scrollIntoView({ line: lineNumber, ch: 0 }, 200);
+
+        // Set cursor to that line
+        this.editor.cm.setCursor({ line: lineNumber, ch: 0 });
+
+        // Focus the editor
+        this.editor.cm.focus();
+
+        // Highlight the line temporarily
+        this.highlightEditorLine(lineNumber);
+    }
+
+    /**
+     * Highlight a line in the editor temporarily
+     */
+    highlightEditorLine(lineNumber) {
+        if (!this.editor || !this.editor.cm) return;
+
+        const lineHandle = this.editor.cm.getLineHandle(lineNumber);
+        if (!lineHandle) return;
+
+        // Add temporary highlight class
+        this.editor.cm.addLineClass(lineNumber, 'background', 'editor-highlight-line');
+
+        // Remove after 2 seconds
+        setTimeout(() => {
+            this.editor.cm.removeLineClass(lineNumber, 'background', 'editor-highlight-line');
+        }, 2000);
     }
 
     /**
@@ -170,11 +220,9 @@ export class SyncManager {
      * Highlight node in mindmap
      */
     highlightMindmapNode(nodeIndex) {
-        // This is a placeholder - actual implementation depends on markmap API
-        // Could be enhanced to highlight specific nodes
-        if (this.mindmap.instance) {
-            // Markmap highlighting would go here
-            console.log('Highlighting mindmap node:', nodeIndex);
+        if (this.mindmap && this.mindmap.instance && this.mindmap.focusEnabled) {
+            // Highlight the node using the new focus feature
+            this.mindmap.highlightNode(nodeIndex);
         }
     }
 

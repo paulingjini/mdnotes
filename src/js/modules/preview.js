@@ -53,6 +53,16 @@ export class Preview {
                 }
             }));
         }
+
+        // Custom renderer for bidirectional editing
+        this.setupBidirectionalRenderer();
+    }
+
+    /**
+     * Setup custom renderer for line tracking
+     */
+    setupBidirectionalRenderer() {
+        // This will be handled in parseWithLineNumbers method
     }
 
     /**
@@ -62,8 +72,11 @@ export class Preview {
         if (!this.container || !window.marked) return;
 
         try {
-            // Parse markdown
-            let html = marked.parse(markdown || '');
+            // Create line mapping
+            this.createLineMapping(markdown);
+
+            // Parse markdown with custom renderer
+            let html = this.parseWithLineNumbers(markdown);
 
             // Process chart blocks
             html = this.processCharts(html);
@@ -81,10 +94,103 @@ export class Preview {
             // Render chart.js charts
             this.renderCharts();
 
+            // Setup click handlers for bidirectional editing
+            this.setupBidirectionalHandlers();
+
         } catch (error) {
             console.error('Preview render error:', error);
             this.container.innerHTML = `<p style="color: red;">Error rendering preview: ${error.message}</p>`;
         }
+    }
+
+    /**
+     * Create line mapping from markdown
+     */
+    createLineMapping(markdown) {
+        const lines = markdown.split('\n');
+        this.lineMapping = {};
+
+        lines.forEach((line, index) => {
+            const trimmed = line.trim();
+            if (trimmed) {
+                // Store line number for non-empty lines
+                this.lineMapping[trimmed.substring(0, 50)] = index;
+            }
+        });
+    }
+
+    /**
+     * Parse markdown with line number tracking
+     */
+    parseWithLineNumbers(markdown) {
+        const lines = markdown.split('\n');
+        let html = marked.parse(markdown);
+
+        // Post-process HTML to add line numbers and editable class
+        // Find text content in HTML and match it back to source lines
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+
+        const elements = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, blockquote');
+
+        elements.forEach(element => {
+            const text = element.textContent.trim();
+            if (text) {
+                // Find the line number in the source
+                const lineNumber = this.findLineNumber(text, lines);
+                if (lineNumber !== -1) {
+                    element.setAttribute('data-source-line', lineNumber);
+                    element.classList.add('editable-element');
+                }
+            }
+        });
+
+        return tempDiv.innerHTML;
+    }
+
+    /**
+     * Find line number for given text in source
+     */
+    findLineNumber(text, lines) {
+        // Try exact match first
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].trim() === text || lines[i].includes(text.substring(0, 30))) {
+                return i;
+            }
+        }
+
+        // Try fuzzy match (removing markdown syntax)
+        const cleanText = text.replace(/[*_`#]/g, '').trim();
+        for (let i = 0; i < lines.length; i++) {
+            const cleanLine = lines[i].replace(/[*_`#]/g, '').trim();
+            if (cleanLine.includes(cleanText.substring(0, 30))) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Setup bidirectional click handlers
+     */
+    setupBidirectionalHandlers() {
+        if (!this.container) return;
+
+        const editableElements = this.container.querySelectorAll('.editable-element');
+
+        editableElements.forEach(element => {
+            element.style.cursor = 'pointer';
+            element.title = 'Click to jump to editor';
+
+            element.addEventListener('click', (e) => {
+                const sourceLine = element.getAttribute('data-source-line');
+                if (sourceLine !== null && this.onElementClick) {
+                    e.stopPropagation();
+                    this.onElementClick(parseInt(sourceLine));
+                }
+            });
+        });
     }
 
     /**
