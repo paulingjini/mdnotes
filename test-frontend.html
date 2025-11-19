@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDNotes Pro - Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 { color: #007acc; }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .success {
+            background: rgba(14, 122, 13, 0.2);
+            border-color: #0e7a0d;
+        }
+        .error {
+            background: rgba(168, 0, 0, 0.2);
+            border-color: #a80000;
+        }
+        .info {
+            background: rgba(0, 122, 204, 0.2);
+            border-color: #007acc;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        code {
+            background: #2d2d30;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #d4d4d4;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 MDNotes Pro - Frontend Test</h1>
+    <p>This page tests if MDNotes Pro loads correctly.</p>
+
+    <div id="results"></div>
+
+    <div style="margin-top: 20px;">
+        <button onclick="window.location.href='dist/index.html'">
+            ✅ Open MDNotes Pro
+        </button>
+        <button onclick="runTests()">
+            🔄 Run Tests Again
+        </button>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        function clear() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function runTests() {
+            clear();
+            log('<strong>Starting tests...</strong>', 'info');
+
+            // Test 1: Check if dist/index.html exists
+            try {
+                const response = await fetch('dist/index.html');
+                if (response.ok) {
+                    log('✅ <strong>dist/index.html</strong> exists and is accessible', 'success');
+                } else {
+                    log('❌ <strong>dist/index.html</strong> returned status: ' + response.status, 'error');
+                    return;
+                }
+            } catch (error) {
+                log('❌ Failed to fetch dist/index.html: ' + error.message, 'error');
+                return;
+            }
+
+            // Test 2: Check if we can load it in an iframe
+            log('⏳ Loading MDNotes Pro in iframe...', 'info');
+
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = 'dist/index.html';
+
+            iframe.onload = function() {
+                try {
+                    // Wait a bit for scripts to load
+                    setTimeout(() => {
+                        try {
+                            const iframeWindow = iframe.contentWindow;
+
+                            // Check if app loaded
+                            if (iframeWindow.app) {
+                                log('✅ <strong>MDNotes App</strong> initialized successfully', 'success');
+                                log('✅ App version: <code>' + (iframeWindow.app.settings?.appName || 'MDNotes Pro') + '</code>', 'success');
+                            } else {
+                                log('⚠️ <strong>App</strong> not found on window object (might be still loading)', 'info');
+                            }
+
+                            // Check Dexie
+                            if (typeof iframeWindow.Dexie !== 'undefined') {
+                                log('✅ <strong>Dexie.js</strong> loaded successfully', 'success');
+                            } else {
+                                log('❌ <strong>Dexie.js</strong> not loaded', 'error');
+                            }
+
+                            // Check db
+                            if (iframeWindow.db) {
+                                log('✅ <strong>Database (window.db)</strong> initialized', 'success');
+                            } else {
+                                log('⚠️ <strong>Database</strong> not initialized (might be deferred)', 'info');
+                            }
+
+                            // Check Block
+                            if (typeof iframeWindow.Block !== 'undefined') {
+                                log('✅ <strong>Block class</strong> available', 'success');
+                            } else {
+                                log('⚠️ <strong>Block class</strong> not available', 'info');
+                            }
+
+                            // Check BlockEditor
+                            if (typeof iframeWindow.BlockEditor !== 'undefined') {
+                                log('✅ <strong>BlockEditor class</strong> available', 'success');
+                            } else {
+                                log('⚠️ <strong>BlockEditor class</strong> not available', 'info');
+                            }
+
+                            log('<br><strong>🎉 Tests completed!</strong><br>If you see green checkmarks above, the app should work correctly.', 'success');
+                            log('<strong>Next step:</strong> Click "Open MDNotes Pro" button above to use the app.', 'info');
+
+                        } catch (error) {
+                            log('⚠️ Cannot access iframe content (CORS): ' + error.message, 'info');
+                            log('This is expected if using file:// protocol. The app should still work.', 'info');
+                            log('<strong>Next step:</strong> Click "Open MDNotes Pro" to verify manually.', 'info');
+                        }
+
+                        // Clean up
+                        document.body.removeChild(iframe);
+                    }, 2000);
+
+                } catch (error) {
+                    log('❌ Error during iframe test: ' + error.message, 'error');
+                    document.body.removeChild(iframe);
+                }
+            };
+
+            iframe.onerror = function() {
+                log('❌ Failed to load MDNotes Pro in iframe', 'error');
+                document.body.removeChild(iframe);
+            };
+
+            document.body.appendChild(iframe);
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html>
