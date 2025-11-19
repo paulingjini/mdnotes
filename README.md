@@ -7,10 +7,11 @@
 ![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
 ![Status](https://img.shields.io/badge/status-production%20ready-success.svg)
 
-**🎉 NEW in v2.1.0**: Hierarchical file system, bidirectional editing, interactive tables, smart task lists, timeline visualization, and offline support!
+**🎉 NEW in v2.1.0**: Notion-style block editor, hierarchical file system, bidirectional editing, interactive tables, smart task lists, timeline visualization, and offline support!
 
 ## 🌟 What's New in v2.1.0
 
+- 📦 **Notion-Style Block Editor** - Toggle between Markdown and Blocks modes with full keyboard shortcuts
 - 🗂️ **Hierarchical File System** - Notion-like folders, tags, favorites, and archive
 - 🔄 **Bidirectional Editing** - Click preview to jump to editor source
 - 🎯 **Mindmap Focus** - Active node highlighting with animations
@@ -33,12 +34,22 @@
 - **Auto-save** - Never lose your work
 
 ### ✍️ Editor
+- **Dual Editor Modes** - Toggle between Markdown and Notion-style Blocks
 - **CodeMirror Integration** - Professional code editing with syntax highlighting
 - **Markdown Toolbar** - Quick formatting buttons
 - **Keyboard Shortcuts** - Efficient editing workflow (Ctrl+B/I/K/S/N)
 - **Fullscreen Mode** - Distraction-free writing
 - **Text Statistics** - Lines, words, and character count
 - **Cursor Tracking** - Synchronized across all panels
+
+### 📦 Block Editor (NEW!)
+- **10 Block Types** - Text, H1/H2/H3, Todo, Bullet, Numbered, Quote, Code, Toggle
+- **Slash Commands** - Type `/` to open command menu
+- **Keyboard Shortcuts** - Enter, Backspace, Tab, Shift+Tab, Arrow keys
+- **Auto-save** - Persistent storage with IndexedDB
+- **Markdown Conversion** - Seamless conversion between Markdown ↔ Blocks
+- **Hierarchical Blocks** - Indent/outdent for nested structure
+- **ContentEditable** - Native browser editing with custom styling
 
 ### 👁️ Preview
 - **Live Rendering** - Real-time markdown preview
