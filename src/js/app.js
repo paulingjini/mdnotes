@@ -26,6 +26,7 @@ class MDNotesApp {
         this.theme = Theme;
         this.fileManager = null;
         this.editor = null;
+        this.blockEditor = null;
         this.preview = null;
         this.mindmap = null;
         this.presentation = null;
@@ -57,6 +58,9 @@ class MDNotesApp {
             preview: false,
             mindmap: false
         };
+
+        this.editorMode = 'markdown'; // 'markdown' or 'blocks'
+        this.currentBlockPageId = null;
 
         // Presentation templates
         this.templates = {
@@ -296,6 +300,106 @@ class MDNotesApp {
         // Refresh editor after layout change
         if (this.editor) {
             setTimeout(() => this.editor.refresh(), 100);
+        }
+    }
+
+    /**
+     * Toggle between Markdown and Block editor modes
+     */
+    async toggleEditorMode() {
+        const newMode = this.editorMode === 'markdown' ? 'blocks' : 'markdown';
+
+        try {
+            if (newMode === 'blocks') {
+                // Switch to block editor
+                await this.switchToBlockEditor();
+            } else {
+                // Switch to markdown editor
+                await this.switchToMarkdownEditor();
+            }
+
+            this.editorMode = newMode;
+
+            // Update button label
+            const label = document.getElementById('editorModeLabel');
+            if (label) {
+                label.textContent = newMode === 'markdown' ? 'Markdown' : 'Blocks';
+            }
+
+            console.log(`Switched to ${newMode} mode`);
+        } catch (error) {
+            console.error('Failed to switch editor mode:', error);
+            alert(`Failed to switch to ${newMode} mode. Check console for details.`);
+        }
+    }
+
+    /**
+     * Switch to block editor mode
+     */
+    async switchToBlockEditor() {
+        // Hide markdown editor
+        const markdownEditor = document.getElementById('editor');
+        const mdToolbar = document.getElementById('mdToolbar');
+        const blockEditorContainer = document.getElementById('blockEditorContainer');
+
+        if (markdownEditor) markdownEditor.classList.add('hidden');
+        if (mdToolbar) mdToolbar.classList.add('hidden');
+        if (blockEditorContainer) blockEditorContainer.classList.remove('hidden');
+
+        // Get current markdown content
+        const markdown = this.editor.getValue();
+        const currentFile = this.fileManager.currentFile;
+
+        // Create or get page for current file
+        if (!this.currentBlockPageId) {
+            // Check if page exists with this title
+            const allPages = await db.getAllPages();
+            let existingPage = allPages.find(p => p.title === currentFile);
+
+            if (existingPage) {
+                this.currentBlockPageId = existingPage.id;
+            } else {
+                // Create new page
+                this.currentBlockPageId = await db.createPage(currentFile);
+
+                // Convert markdown to blocks
+                if (markdown.trim()) {
+                    await db.markdownToBlocks(this.currentBlockPageId, markdown);
+                }
+            }
+        }
+
+        // Initialize block editor if not already initialized
+        if (!this.blockEditor) {
+            this.blockEditor = new BlockEditor(blockEditorContainer);
+        }
+
+        // Load the page
+        await this.blockEditor.init(this.currentBlockPageId);
+    }
+
+    /**
+     * Switch to markdown editor mode
+     */
+    async switchToMarkdownEditor() {
+        // Show markdown editor
+        const markdownEditor = document.getElementById('editor');
+        const mdToolbar = document.getElementById('mdToolbar');
+        const blockEditorContainer = document.getElementById('blockEditorContainer');
+
+        if (markdownEditor) markdownEditor.classList.remove('hidden');
+        if (mdToolbar) mdToolbar.classList.remove('hidden');
+        if (blockEditorContainer) blockEditorContainer.classList.add('hidden');
+
+        // Export blocks to markdown if in block mode
+        if (this.blockEditor && this.currentBlockPageId) {
+            const markdown = await this.blockEditor.exportToMarkdown();
+            this.editor.setValue(markdown);
+        }
+
+        // Refresh editor
+        if (this.editor) {
+            this.editor.refresh();
         }
     }
 

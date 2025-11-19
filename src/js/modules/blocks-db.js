@@ -375,7 +375,39 @@ class BlocksDatabase extends Dexie {
     }
 }
 
-// Create singleton instance
-const db = new BlocksDatabase();
+// Create singleton instance and expose globally
+// Deferred initialization to ensure Dexie is loaded
+let dbInstance = null;
 
-export default db;
+function initDatabase() {
+    if (!dbInstance) {
+        if (typeof Dexie === 'undefined') {
+            console.error('Dexie.js not loaded! Block editor will not work.');
+            return null;
+        }
+        try {
+            dbInstance = new BlocksDatabase();
+            console.log('BlocksDatabase initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize BlocksDatabase:', error);
+            return null;
+        }
+    }
+    return dbInstance;
+}
+
+// Initialize on first access or immediately if Dexie is available
+if (typeof Dexie !== 'undefined') {
+    window.db = initDatabase();
+} else {
+    // Wait for Dexie to load
+    console.warn('Dexie not yet loaded, deferring database initialization');
+    Object.defineProperty(window, 'db', {
+        get: function() {
+            return initDatabase();
+        },
+        configurable: true
+    });
+}
+
+export default window.db;

@@ -530,3 +530,6 @@ export class Block {
         }
     }
 }
+
+// Expose globally
+window.Block = Block;
