@@ -6,19 +6,26 @@
  * <script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"></script>
  */
 
-class BlocksDatabase extends Dexie {
-    constructor() {
-        super('MDNotesBlocks');
-
-        this.version(1).stores({
-            pages: '++id, title, icon, coverImage, createdAt, updatedAt, isFavorite, parentId',
-            blocks: '++id, pageId, type, content, properties, parentId, *childIds, position, createdAt, updatedAt'
-        });
-
-        // Type definitions for better IDE support
-        this.pages = this.table('pages');
-        this.blocks = this.table('blocks');
+// Function to create the BlocksDatabase class only when Dexie is available
+function createBlocksDatabase() {
+    if (typeof Dexie === 'undefined') {
+        console.error('Dexie.js is not loaded! Cannot create BlocksDatabase.');
+        return null;
     }
+
+    class BlocksDatabase extends Dexie {
+        constructor() {
+            super('MDNotesBlocks');
+
+            this.version(1).stores({
+                pages: '++id, title, icon, coverImage, createdAt, updatedAt, isFavorite, parentId',
+                blocks: '++id, pageId, type, content, properties, parentId, *childIds, position, createdAt, updatedAt'
+            });
+
+            // Type definitions for better IDE support
+            this.pages = this.table('pages');
+            this.blocks = this.table('blocks');
+        }
 
     /**
      * Create a new page
@@ -373,11 +380,14 @@ class BlocksDatabase extends Dexie {
 
         return markdown;
     }
+
+    return BlocksDatabase;
 }
 
 // Create singleton instance and expose globally
 // Deferred initialization to ensure Dexie is loaded
 let dbInstance = null;
+let BlocksDatabase = null;
 
 function initDatabase() {
     if (!dbInstance) {
@@ -386,6 +396,13 @@ function initDatabase() {
             return null;
         }
         try {
+            // Create the class if not already created
+            if (!BlocksDatabase) {
+                BlocksDatabase = createBlocksDatabase();
+                if (!BlocksDatabase) {
+                    return null;
+                }
+            }
             dbInstance = new BlocksDatabase();
             console.log('BlocksDatabase initialized successfully');
         } catch (error) {
