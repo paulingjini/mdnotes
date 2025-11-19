@@ -127,7 +127,13 @@
 - [x] Template import/export
 - [x] Dynamic CSS injection
 
-## 🚧 In Progress
+### Interactive Features (v2.1.0 continued)
+- [x] Bidirectional editing (click preview → jump to editor)
+- [x] Mindmap active node focus with highlighting
+- [x] Interactive tables (sort by column, filter, export CSV)
+- [x] Enhanced task lists with checkboxes and progress bars
+
+## 🚧 In Progress (v2.2.0)
 
 ### Testing & QA
 - [ ] Cross-browser testing (Chrome, Firefox, Safari, Edge)
@@ -135,12 +141,8 @@
 - [ ] Performance optimization
 - [ ] Error handling improvements
 
-### Enterprise Features (v2.2.0)
+### Enterprise Features
 - [ ] Advanced template/configuration UI management
-- [ ] Bidirectional editing (preview → editor)
-- [ ] Mindmap active node focus/highlighting
-- [ ] Interactive table management (sort, filter, export)
-- [ ] Enhanced task lists with interactive checkboxes
 - [ ] Download all external libraries locally (no CDN)
 - [ ] Modern UI with shadcn/ui design system
 - [ ] Integrate timesheet.js for timeline visualization

@@ -732,6 +732,142 @@ select {
     100% { background-color: rgba(0, 122, 204, 0.1); }
 }
 
+/* Interactive Tables */
+.interactive-table-wrapper {
+    margin: 20px 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.table-toolbar {
+    background: var(--bg-secondary);
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.table-filter {
+    flex: 1;
+}
+
+.table-filter-input {
+    width: 100%;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.table-export-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.table-row-count {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.interactive-table {
+    width: 100%;
+}
+
+.interactive-table thead th {
+    user-select: none;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.interactive-table thead th:hover {
+    background: var(--bg-tertiary) !important;
+}
+
+.sort-icon {
+    color: var(--text-secondary);
+    font-size: 10px;
+    opacity: 0.6;
+}
+
+.interactive-table thead th:hover .sort-icon {
+    opacity: 1;
+}
+
+/* Task Lists */
+.task-list-item {
+    list-style: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 8px 0;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.task-list-item:hover {
+    background: var(--bg-secondary);
+}
+
+.task-updating {
+    transform: scale(0.98);
+    opacity: 0.7;
+}
+
+.task-checkbox {
+    margin-top: 3px;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+}
+
+.task-label {
+    flex: 1;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.task-label.completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+    color: var(--text-secondary);
+}
+
+.task-progress {
+    margin: 10px 0;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+}
+
+.task-progress-bar {
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.task-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #00cc88);
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.task-progress-text {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
 
 /* Modal Dialogs */
 .modal {
@@ -5274,9 +5410,533 @@ section Section Name
 
 
 /**
+ * Interactive Tables Extension
+ * Adds sort, filter, and export capabilities to markdown tables
+ */
+class InteractiveTablesExtension {
+    constructor() {
+        this.tables = [];
+        this.sortState = new Map();
+    }
+
+    /**
+     * Initialize extension
+     */
+    init() {
+        console.log('Interactive Tables extension initialized');
+    }
+
+    /**
+     * Process all tables in the preview
+     */
+    process(container) {
+        if (!container) return;
+
+        const tables = container.querySelectorAll('table');
+        tables.forEach((table, index) => {
+            this.enhanceTable(table, index);
+        });
+    }
+
+    /**
+     * Enhance a single table with interactive features
+     */
+    enhanceTable(table, index) {
+        // Skip if already enhanced
+        if (table.classList.contains('interactive-table')) return;
+
+        table.classList.add('interactive-table');
+        table.setAttribute('data-table-id', index);
+
+        // Wrap table in container
+        const wrapper = document.createElement('div');
+        wrapper.className = 'interactive-table-wrapper';
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+
+        // Add toolbar
+        const toolbar = this.createToolbar(table, index);
+        wrapper.insertBefore(toolbar, table);
+
+        // Make headers sortable
+        const headers = table.querySelectorAll('thead th');
+        headers.forEach((header, colIndex) => {
+            header.classList.add('sortable');
+            header.setAttribute('data-col-index', colIndex);
+            header.style.cursor = 'pointer';
+            header.title = 'Click to sort';
+
+            // Add sort icon
+            const sortIcon = document.createElement('span');
+            sortIcon.className = 'sort-icon';
+            sortIcon.innerHTML = ' ⇅';
+            header.appendChild(sortIcon);
+
+            header.addEventListener('click', () => {
+                this.sortTable(table, colIndex);
+            });
+        });
+
+        // Store original rows for filtering
+        this.storeTableData(table, index);
+    }
+
+    /**
+     * Create toolbar with filter and export options
+     */
+    createToolbar(table, index) {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'table-toolbar';
+
+        // Filter input
+        const filterContainer = document.createElement('div');
+        filterContainer.className = 'table-filter';
+
+        const filterInput = document.createElement('input');
+        filterInput.type = 'text';
+        filterInput.placeholder = '🔍 Filter table...';
+        filterInput.className = 'table-filter-input';
+        filterInput.addEventListener('input', (e) => {
+            this.filterTable(table, e.target.value);
+        });
+
+        filterContainer.appendChild(filterInput);
+
+        // Export button
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'btn table-export-btn';
+        exportBtn.innerHTML = '📥 Export CSV';
+        exportBtn.addEventListener('click', () => {
+            this.exportTableToCSV(table, `table-${index}`);
+        });
+
+        // Row count
+        const rowCount = document.createElement('span');
+        rowCount.className = 'table-row-count';
+        const rows = table.querySelectorAll('tbody tr').length;
+        rowCount.textContent = `${rows} rows`;
+        rowCount.setAttribute('data-total-rows', rows);
+
+        toolbar.appendChild(filterContainer);
+        toolbar.appendChild(exportBtn);
+        toolbar.appendChild(rowCount);
+
+        return toolbar;
+    }
+
+    /**
+     * Store original table data
+     */
+    storeTableData(table, index) {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        this.tables[index] = {
+            table: table,
+            originalRows: rows.map(row => row.cloneNode(true)),
+            visibleRows: rows.length
+        };
+    }
+
+    /**
+     * Sort table by column
+     */
+    sortTable(table, colIndex) {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const tableId = table.getAttribute('data-table-id');
+
+        // Get current sort state
+        const sortKey = `${tableId}-${colIndex}`;
+        const currentSort = this.sortState.get(sortKey) || 'none';
+        let newSort = 'asc';
+
+        if (currentSort === 'none') newSort = 'asc';
+        else if (currentSort === 'asc') newSort = 'desc';
+        else newSort = 'none';
+
+        // Update sort state
+        this.sortState.clear(); // Only one column sorted at a time
+        this.sortState.set(sortKey, newSort);
+
+        // Update sort icons
+        const headers = table.querySelectorAll('thead th');
+        headers.forEach((header, idx) => {
+            const icon = header.querySelector('.sort-icon');
+            if (idx === colIndex) {
+                icon.innerHTML = newSort === 'asc' ? ' ↑' : newSort === 'desc' ? ' ↓' : ' ⇅';
+            } else {
+                icon.innerHTML = ' ⇅';
+            }
+        });
+
+        if (newSort === 'none') {
+            // Restore original order
+            const tableData = this.tables[parseInt(tableId)];
+            if (tableData) {
+                tbody.innerHTML = '';
+                tableData.originalRows.forEach(row => {
+                    tbody.appendChild(row.cloneNode(true));
+                });
+            }
+            return;
+        }
+
+        // Sort rows
+        rows.sort((a, b) => {
+            const aCell = a.cells[colIndex];
+            const bCell = b.cells[colIndex];
+
+            if (!aCell || !bCell) return 0;
+
+            let aValue = aCell.textContent.trim();
+            let bValue = bCell.textContent.trim();
+
+            // Try to parse as numbers
+            const aNum = parseFloat(aValue);
+            const bNum = parseFloat(bValue);
+
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+                return newSort === 'asc' ? aNum - bNum : bNum - aNum;
+            }
+
+            // String comparison
+            return newSort === 'asc'
+                ? aValue.localeCompare(bValue)
+                : bValue.localeCompare(aValue);
+        });
+
+        // Re-append sorted rows
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    /**
+     * Filter table rows
+     */
+    filterTable(table, filterText) {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+
+        const filterLower = filterText.toLowerCase();
+        const rows = tbody.querySelectorAll('tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(filterLower)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update row count
+        const wrapper = table.closest('.interactive-table-wrapper');
+        if (wrapper) {
+            const rowCount = wrapper.querySelector('.table-row-count');
+            if (rowCount) {
+                const total = rowCount.getAttribute('data-total-rows');
+                rowCount.textContent = filterText
+                    ? `${visibleCount} / ${total} rows`
+                    : `${total} rows`;
+            }
+        }
+    }
+
+    /**
+     * Export table to CSV
+     */
+    exportTableToCSV(table, filename) {
+        const rows = [];
+
+        // Get headers
+        const headers = table.querySelectorAll('thead th');
+        const headerRow = [];
+        headers.forEach(header => {
+            // Remove sort icon
+            const text = header.textContent.replace(/[⇅↑↓]/g, '').trim();
+            headerRow.push(this.escapeCSV(text));
+        });
+        rows.push(headerRow.join(','));
+
+        // Get visible data rows
+        const dataRows = table.querySelectorAll('tbody tr');
+        dataRows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const cells = row.querySelectorAll('td');
+                const rowData = [];
+                cells.forEach(cell => {
+                    rowData.push(this.escapeCSV(cell.textContent.trim()));
+                });
+                rows.push(rowData.join(','));
+            }
+        });
+
+        // Create CSV string
+        const csv = rows.join('\n');
+
+        // Download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${filename}.csv`;
+        link.click();
+    }
+
+    /**
+     * Escape CSV value
+     */
+    escapeCSV(value) {
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+            return '"' + value.replace(/"/g, '""') + '"';
+        }
+        return value;
+    }
+
+    /**
+     * Clear all enhancements
+     */
+    clear() {
+        this.tables = [];
+        this.sortState.clear();
+    }
+}
+
+
+/**
+ * Task Lists Extension
+ * Adds interactive checkboxes to task lists with persistence
+ */
+class TaskListsExtension {
+    constructor() {
+        this.tasks = new Map();
+    }
+
+    /**
+     * Initialize extension
+     */
+    init() {
+        console.log('Task Lists extension initialized');
+    }
+
+    /**
+     * Process all task lists in the preview
+     */
+    process(container, markdown) {
+        if (!container) return;
+
+        // Find all list items with checkboxes
+        const listItems = container.querySelectorAll('li');
+
+        listItems.forEach((li, index) => {
+            const text = li.textContent.trim();
+
+            // Check if it's a task list item (starts with [ ] or [x])
+            if (text.startsWith('[ ]') || text.startsWith('[x]') || text.startsWith('[X]')) {
+                this.enhanceTaskItem(li, index, markdown);
+            }
+        });
+    }
+
+    /**
+     * Enhance a task list item
+     */
+    enhanceTaskItem(li, index, markdown) {
+        // Skip if already enhanced
+        if (li.classList.contains('task-list-item')) return;
+
+        li.classList.add('task-list-item');
+
+        const text = li.textContent.trim();
+        const isChecked = text.startsWith('[x]') || text.startsWith('[X]');
+
+        // Create checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'task-checkbox';
+        checkbox.checked = isChecked;
+        checkbox.setAttribute('data-task-index', index);
+
+        // Create label with task text
+        const label = document.createElement('label');
+        label.className = 'task-label';
+        const taskText = text.substring(3).trim(); // Remove [x] or [ ]
+        label.textContent = taskText;
+
+        if (isChecked) {
+            label.classList.add('completed');
+        }
+
+        // Handle checkbox change
+        checkbox.addEventListener('change', (e) => {
+            this.handleTaskToggle(e, li, label, markdown);
+        });
+
+        // Clear existing content and add new elements
+        li.innerHTML = '';
+        li.appendChild(checkbox);
+        li.appendChild(label);
+
+        // Add progress indicator if this is in a list with multiple tasks
+        const ul = li.closest('ul');
+        if (ul) {
+            this.updateTaskListProgress(ul);
+        }
+    }
+
+    /**
+     * Handle task checkbox toggle
+     */
+    handleTaskToggle(event, li, label, markdown) {
+        const checkbox = event.target;
+        const isChecked = checkbox.checked;
+
+        // Update label styling
+        if (isChecked) {
+            label.classList.add('completed');
+        } else {
+            label.classList.remove('completed');
+        }
+
+        // Add visual feedback
+        li.classList.add('task-updating');
+        setTimeout(() => {
+            li.classList.remove('task-updating');
+        }, 300);
+
+        // Update progress
+        const ul = li.closest('ul');
+        if (ul) {
+            this.updateTaskListProgress(ul);
+        }
+
+        // Trigger callback for editor update (if connected)
+        if (this.onTaskChange) {
+            const taskIndex = checkbox.getAttribute('data-task-index');
+            this.onTaskChange(taskIndex, isChecked, label.textContent);
+        }
+    }
+
+    /**
+     * Update task list progress indicator
+     */
+    updateTaskListProgress(ul) {
+        // Skip if already has progress bar
+        let progressBar = ul.previousElementSibling;
+        if (!progressBar || !progressBar.classList.contains('task-progress')) {
+            progressBar = document.createElement('div');
+            progressBar.className = 'task-progress';
+            ul.parentNode.insertBefore(progressBar, ul);
+        }
+
+        // Count tasks
+        const taskItems = ul.querySelectorAll('.task-list-item');
+        const total = taskItems.length;
+        const completed = ul.querySelectorAll('.task-checkbox:checked').length;
+        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        // Update progress bar
+        progressBar.innerHTML = `
+            <div class="task-progress-bar">
+                <div class="task-progress-fill" style="width: ${percentage}%"></div>
+            </div>
+            <div class="task-progress-text">
+                ${completed} / ${total} tasks completed (${percentage}%)
+            </div>
+        `;
+    }
+
+    /**
+     * Update markdown source with task state
+     */
+    updateMarkdownTask(markdown, taskIndex, isChecked) {
+        const lines = markdown.split('\n');
+        let taskCount = 0;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (line.match(/^[-*]\s\[[ xX]\]/)) {
+                if (taskCount === parseInt(taskIndex)) {
+                    // Update this line
+                    const newState = isChecked ? '[x]' : '[ ]';
+                    lines[i] = lines[i].replace(/\[[ xX]\]/, newState);
+                    break;
+                }
+                taskCount++;
+            }
+        }
+
+        return lines.join('\n');
+    }
+
+    /**
+     * Export task list as checklist
+     */
+    exportTaskList(ul, filename) {
+        const tasks = [];
+        const taskItems = ul.querySelectorAll('.task-list-item');
+
+        taskItems.forEach(item => {
+            const checkbox = item.querySelector('.task-checkbox');
+            const label = item.querySelector('.task-label');
+            if (checkbox && label) {
+                tasks.push({
+                    completed: checkbox.checked,
+                    text: label.textContent
+                });
+            }
+        });
+
+        // Create plain text format
+        const text = tasks.map(task =>
+            `${task.completed ? '[x]' : '[ ]'} ${task.text}`
+        ).join('\n');
+
+        // Download
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${filename}.txt`;
+        link.click();
+    }
+
+    /**
+     * Get task statistics
+     */
+    getTaskStats(container) {
+        if (!container) return null;
+
+        const taskItems = container.querySelectorAll('.task-list-item');
+        const total = taskItems.length;
+        const completed = container.querySelectorAll('.task-checkbox:checked').length;
+
+        return {
+            total,
+            completed,
+            pending: total - completed,
+            percentage: total > 0 ? Math.round((completed / total) * 100) : 0
+        };
+    }
+
+    /**
+     * Clear all enhancements
+     */
+    clear() {
+        this.tasks.clear();
+    }
+}
+
+
+/**
  * MDNotes Pro - Main Application
  * Professional Markdown Editor with Presentation & Visualization
  */
+
+
 
 
 
@@ -5306,6 +5966,8 @@ class MDNotesApp {
         // Extensions
         this.chartsExt = null;
         this.timelineExt = null;
+        this.interactiveTablesExt = null;
+        this.taskListsExt = null;
 
         // Advanced features
         this.syncManager = null;
@@ -5382,6 +6044,12 @@ class MDNotesApp {
 
         this.timelineExt = new TimelineExtension();
         this.timelineExt.init();
+
+        this.interactiveTablesExt = new InteractiveTablesExtension();
+        this.interactiveTablesExt.init();
+
+        this.taskListsExt = new TaskListsExtension();
+        this.taskListsExt.init();
 
         // Initialize advanced features
         this.syncManager = new SyncManager(this.editor, this.preview, this.mindmap);
@@ -5485,6 +6153,8 @@ class MDNotesApp {
         if (this.views.preview && !this.presentation.isActive) {
             this.preview.update(content);
             this.chartsExt.process(this.preview.container);
+            this.interactiveTablesExt.process(this.preview.container);
+            this.taskListsExt.process(this.preview.container, content);
         }
 
         // Update mindmap if visible
@@ -5546,8 +6216,11 @@ class MDNotesApp {
         }
 
         if (viewName === 'preview' && this.views.preview) {
-            this.preview.update(this.editor.getValue());
+            const content = this.editor.getValue();
+            this.preview.update(content);
             this.chartsExt.process(this.preview.container);
+            this.interactiveTablesExt.process(this.preview.container);
+            this.taskListsExt.process(this.preview.container, content);
         }
 
         // Refresh editor after layout change

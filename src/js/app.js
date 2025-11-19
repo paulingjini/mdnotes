@@ -13,6 +13,8 @@ import { Presentation } from './modules/presentation.js';
 import { ExportManager } from './modules/export.js';
 import { ChartsExtension } from './extensions/charts.js';
 import { TimelineExtension } from './extensions/timeline.js';
+import { InteractiveTablesExtension } from './extensions/interactive-tables.js';
+import { TaskListsExtension } from './extensions/task-lists.js';
 import { SyncManager } from './modules/sync.js';
 import { PresentationTemplates } from './modules/presentation-templates.js';
 import { AdvancedExport } from './modules/export-advanced.js';
@@ -32,6 +34,8 @@ class MDNotesApp {
         // Extensions
         this.chartsExt = null;
         this.timelineExt = null;
+        this.interactiveTablesExt = null;
+        this.taskListsExt = null;
 
         // Advanced features
         this.syncManager = null;
@@ -108,6 +112,12 @@ class MDNotesApp {
 
         this.timelineExt = new TimelineExtension();
         this.timelineExt.init();
+
+        this.interactiveTablesExt = new InteractiveTablesExtension();
+        this.interactiveTablesExt.init();
+
+        this.taskListsExt = new TaskListsExtension();
+        this.taskListsExt.init();
 
         // Initialize advanced features
         this.syncManager = new SyncManager(this.editor, this.preview, this.mindmap);
@@ -211,6 +221,8 @@ class MDNotesApp {
         if (this.views.preview && !this.presentation.isActive) {
             this.preview.update(content);
             this.chartsExt.process(this.preview.container);
+            this.interactiveTablesExt.process(this.preview.container);
+            this.taskListsExt.process(this.preview.container, content);
         }
 
         // Update mindmap if visible
@@ -272,8 +284,11 @@ class MDNotesApp {
         }
 
         if (viewName === 'preview' && this.views.preview) {
-            this.preview.update(this.editor.getValue());
+            const content = this.editor.getValue();
+            this.preview.update(content);
             this.chartsExt.process(this.preview.container);
+            this.interactiveTablesExt.process(this.preview.container);
+            this.taskListsExt.process(this.preview.container, content);
         }
 
         // Refresh editor after layout change

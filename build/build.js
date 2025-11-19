@@ -55,6 +55,8 @@ const jsModules = [
     'modules/sync.js',
     'extensions/charts.js',
     'extensions/timeline.js',
+    'extensions/interactive-tables.js',
+    'extensions/task-lists.js',
     'app.js'
 ];
 
