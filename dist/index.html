@@ -1056,13 +1056,34 @@ body[data-toolbar-style="icon-text"] .toolbar-btn {
 .file-item.dragging {
     opacity: 0.5;
     background: var(--bg-tertiary);
+    cursor: move;
 }
 
 .folder-item.drag-over {
     background: var(--accent);
     border-color: var(--accent);
-    color: white;
+    color: white !important;
     box-shadow: 0 0 0 2px var(--accent);
+    transition: all 0.2s ease;
+    cursor: copy;
+}
+
+.folder-item.drag-over * {
+    color: white !important;
+}
+
+/* Cursor styles for dragging */
+.folder-item[draggable="true"]:hover {
+    cursor: grab;
+}
+
+.file-item[draggable="true"]:hover {
+    cursor: grab;
+}
+
+.folder-item[draggable="true"]:active,
+.file-item[draggable="true"]:active {
+    cursor: grabbing;
 }
 
 .folder-count {
@@ -3257,13 +3278,30 @@ class AdvancedFileSystem {
         });
 
         // Drag & drop for folders
+        let dragCounter = 0; // Counter to handle dragleave properly
+
+        folderEl.ondragenter = (e) => {
+            e.preventDefault();
+            dragCounter++;
+
+            // Check if we're dragging this folder onto itself
+            const sourceFolderId = e.dataTransfer.types.includes('folderId')
+                ? folderEl.dataset.folderId
+                : null;
+
+            if (sourceFolderId !== node.id) {
+                folderEl.classList.add('drag-over');
+            }
+        };
+
         folderEl.ondragover = (e) => {
             e.preventDefault();
-            folderEl.classList.add('drag-over');
+            e.dataTransfer.dropEffect = 'move';
         };
 
         folderEl.ondragleave = (e) => {
-            if (e.target === folderEl) {
+            dragCounter--;
+            if (dragCounter === 0) {
                 folderEl.classList.remove('drag-over');
             }
         };
@@ -3271,6 +3309,7 @@ class AdvancedFileSystem {
         folderEl.ondrop = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            dragCounter = 0;
             folderEl.classList.remove('drag-over');
 
             const filename = e.dataTransfer.getData('filename');
