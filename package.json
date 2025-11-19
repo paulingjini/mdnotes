@@ -26,6 +26,7 @@
     "type": "git",
     "url": "https://github.com/paulingjini/mdnotes"
   },
-  "devDependencies": {},
-  "dependencies": {}
+  "dependencies": {
+    "dexie": "^4.2.1"
+  }
 }

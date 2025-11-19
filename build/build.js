@@ -25,7 +25,8 @@ const cssFiles = [
     'base.css',
     'shadcn.css',
     'components.css',
-    'modals.css'
+    'modals.css',
+    'blocks.css'
 ];
 
 let css = '';
@@ -46,6 +47,9 @@ const jsModules = [
     'modules/theme.js',
     'modules/file-manager.js',
     'modules/file-system-advanced.js',
+    'modules/blocks-db.js',
+    'modules/block.js',
+    'modules/block-editor.js',
     'modules/editor.js',
     'modules/preview.js',
     'modules/mindmap.js',
