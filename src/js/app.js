@@ -221,6 +221,7 @@ class MDNotesApp {
         if (this.views.preview && !this.presentation.isActive) {
             this.preview.update(content);
             this.chartsExt.process(this.preview.container);
+            this.timelineExt.process(this.preview.container);
             this.interactiveTablesExt.process(this.preview.container);
             this.taskListsExt.process(this.preview.container, content);
         }
@@ -287,6 +288,7 @@ class MDNotesApp {
             const content = this.editor.getValue();
             this.preview.update(content);
             this.chartsExt.process(this.preview.container);
+            this.timelineExt.process(this.preview.container);
             this.interactiveTablesExt.process(this.preview.container);
             this.taskListsExt.process(this.preview.container, content);
         }
