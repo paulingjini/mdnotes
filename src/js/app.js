@@ -538,23 +538,35 @@ class MDNotesApp {
         const modal = document.createElement('div');
         modal.className = 'modal show';
         modal.innerHTML = `
-            <div class="dialog-overlay" onclick="this.closest('.modal').remove()"></div>
+            <div class="dialog-overlay"></div>
             <div class="dialog-content">
                 <div class="dialog-header">
                     <div class="dialog-title">${title}</div>
-                    <button class="icon-btn" onclick="this.closest('.modal').remove()">✕</button>
+                    <button class="icon-btn dialog-close-btn">✕</button>
                 </div>
                 <div style="padding: 24px; padding-top: 0;">
                     <p style="color: var(--text-secondary);">${message}</p>
                 </div>
                 <div class="dialog-footer">
-                    <button class="btn-shadcn btn-outline btn-md" onclick="this.closest('.modal').remove()">Cancel</button>
+                    <button class="btn-shadcn btn-outline btn-md dialog-cancel-btn">Cancel</button>
                     <button class="btn-shadcn btn-destructive btn-md" id="confirmBtn">Confirm</button>
                 </div>
             </div>
         `;
 
         document.body.appendChild(modal);
+
+        // Handle overlay click (close modal)
+        const overlay = modal.querySelector('.dialog-overlay');
+        overlay.onclick = () => modal.remove();
+
+        // Handle X button click (close modal)
+        const closeBtn = modal.querySelector('.dialog-close-btn');
+        closeBtn.onclick = () => modal.remove();
+
+        // Handle cancel button click (close modal)
+        const cancelBtn = modal.querySelector('.dialog-cancel-btn');
+        cancelBtn.onclick = () => modal.remove();
 
         // Handle confirm
         const confirmBtn = modal.querySelector('#confirmBtn');
