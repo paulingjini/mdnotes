@@ -5,6 +5,8 @@
 
 import { Storage } from './modules/storage.js';
 import { Theme } from './modules/theme.js';
+import { Toast } from './modules/toast.js';
+import { LayoutManager } from './modules/layout-manager.js';
 import { AdvancedFileSystem } from './modules/file-system-advanced.js';
 import { Editor } from './modules/editor.js';
 import { Preview } from './modules/preview.js';
@@ -24,6 +26,7 @@ class MDNotesApp {
         // Core modules
         this.storage = Storage;
         this.theme = Theme;
+        this.layoutManager = null;
         this.fileManager = null;
         this.editor = null;
         this.blockEditor = null;
@@ -82,6 +85,14 @@ class MDNotesApp {
 
         // Apply theme
         this.theme.apply(this.settings.theme);
+
+        // Initialize toast notifications
+        Toast.init();
+
+        // Initialize layout manager (modern UI)
+        this.layoutManager = new LayoutManager();
+        this.layoutManager.init();
+        this.layoutManager.onTabChange = (tabId) => this.handleTabChange(tabId);
 
         // Initialize modules
         this.fileManager = new AdvancedFileSystem(this.storage);
@@ -256,9 +267,70 @@ class MDNotesApp {
     }
 
     /**
-     * Toggle view visibility
+     * Handle tab change from layout manager (new UI)
+     */
+    handleTabChange(tabId) {
+        console.log('Tab changed to:', tabId);
+
+        // Handle special case: present tab
+        if (tabId === 'present') {
+            // Start presentation mode
+            this.togglePresentation();
+            // Switch back to editor tab after starting presentation
+            if (this.layoutManager) {
+                setTimeout(() => this.layoutManager.switchTab('editor'), 100);
+            }
+            return;
+        }
+
+        // Update content based on active tab
+        const content = this.editor ? this.editor.getValue() : '';
+
+        switch (tabId) {
+            case 'preview':
+                if (this.preview) {
+                    setTimeout(() => {
+                        this.preview.update(content);
+                        this.chartsExt?.process(this.preview.container);
+                        this.timelineExt?.process(this.preview.container);
+                        this.interactiveTablesExt?.process(this.preview.container);
+                        this.taskListsExt?.process(this.preview.container, content);
+                    }, 100);
+                }
+                break;
+
+            case 'mindmap':
+                if (this.mindmap) {
+                    setTimeout(() => this.mindmap.render(content), 100);
+                }
+                break;
+
+            case 'editor':
+                if (this.editor) {
+                    setTimeout(() => this.editor.refresh(), 100);
+                }
+                break;
+        }
+
+        // Update old view state for backwards compatibility
+        this.views = {
+            editor: tabId === 'editor',
+            preview: tabId === 'preview',
+            mindmap: tabId === 'mindmap'
+        };
+    }
+
+    /**
+     * Toggle view visibility (legacy - kept for backwards compatibility)
      */
     toggleView(viewName) {
+        // Use new layout manager if available
+        if (this.layoutManager) {
+            this.layoutManager.switchTab(viewName);
+            return;
+        }
+
+        // Fallback to old behavior
         this.views[viewName] = !this.views[viewName];
 
         // Update UI
@@ -491,22 +563,17 @@ class MDNotesApp {
     }
 
     /**
-     * Show notification
+     * Show notification using modern toast system
      */
     showNotification(message, type = 'info') {
+        // Use new toast notification system
+        Toast.show(message, type, 3000);
+
+        // Also update status bar for backward compatibility
         const statusLeft = document.getElementById('statusLeft');
-        if (!statusLeft) return;
-
-        const originalText = statusLeft.textContent;
-        const originalColor = statusLeft.style.color;
-
-        statusLeft.style.color = type === 'error' ? '#f44336' : '#4caf50';
-        statusLeft.textContent = message;
-
-        setTimeout(() => {
-            statusLeft.textContent = originalText;
-            statusLeft.style.color = originalColor;
-        }, 3000);
+        if (statusLeft) {
+            statusLeft.textContent = message;
+        }
     }
 
     /**
@@ -697,7 +764,13 @@ class MDNotesApp {
     }
 
     toggleFileManager() {
-        this.fileManager.toggleVisibility();
+        // Use new layout manager's sidebar toggle if available
+        if (this.layoutManager) {
+            this.layoutManager.toggleSidebar();
+        } else {
+            // Fallback to old file manager toggle
+            this.fileManager.toggleVisibility();
+        }
     }
 
     /**

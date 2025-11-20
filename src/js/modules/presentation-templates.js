@@ -370,6 +370,12 @@ export class PresentationTemplates {
      * Inject logo into presentation
      */
     injectLogo(logoConfig) {
+        // Validate logoConfig
+        if (!logoConfig || !logoConfig.url) {
+            console.warn('injectLogo called without valid logoConfig.url');
+            return;
+        }
+
         // Remove existing logo
         const existingLogo = document.getElementById('presentation-logo');
         if (existingLogo) {
@@ -380,8 +386,8 @@ export class PresentationTemplates {
         logoEl.id = 'presentation-logo';
         logoEl.style.position = 'fixed';
         logoEl.style.zIndex = '100';
-        logoEl.style.width = logoConfig.width;
-        logoEl.style.height = logoConfig.height;
+        logoEl.style.width = logoConfig.width || '100px';
+        logoEl.style.height = logoConfig.height || '100px';
 
         // Position
         const positions = {

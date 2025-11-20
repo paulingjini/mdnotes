@@ -3,7 +3,7 @@
  * Notion-style block-based editor persistence
  *
  * Note: Requires Dexie.js to be loaded globally via CDN
- * <script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"></script>
+ * Example: <script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"><\/script>
  */
 
 // Function to create the BlocksDatabase class only when Dexie is available

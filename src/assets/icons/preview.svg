@@ -1,0 +1,12 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Eye shape -->
+  <path d="M 2 10 C 2 10 5 4 10 4 C 15 4 18 10 18 10 C 18 10 15 16 10 16 C 5 16 2 10 2 10 Z"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linejoin="round"
+        fill="none"/>
+
+  <!-- Pupil -->
+  <circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+  <circle cx="10" cy="10" r="1.5" fill="currentColor"/>
+</svg>

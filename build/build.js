@@ -21,12 +21,15 @@ let html = fs.readFileSync(templatePath, 'utf8');
 // Read and combine CSS
 console.log('🎨 Processing CSS...');
 const cssFiles = [
+    'design-system.css',
     'variables.css',
     'base.css',
     'shadcn.css',
+    'layout-v2.css',
     'components.css',
     'modals.css',
-    'blocks.css'
+    'blocks.css',
+    'animations.css'
 ];
 
 let css = '';
@@ -45,6 +48,8 @@ console.log('📦 Processing JavaScript modules...');
 const jsModules = [
     'modules/storage.js',
     'modules/theme.js',
+    'modules/toast.js',
+    'modules/layout-manager.js',
     'modules/file-manager.js',
     'modules/file-system-advanced.js',
     'modules/blocks-db.js',
