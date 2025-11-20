@@ -952,9 +952,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     try {
         window.app = new MDNotesApp();
         await window.app.init();
+
+        // Hide the loading spinner
+        window.app.hideSpinner();
     } catch (error) {
         console.error('Failed to initialize MDNotes Pro:', error);
         console.error('Stack trace:', error.stack);
+
+        // Hide the loading spinner
+        const spinner = document.getElementById('spinnerOverlay');
+        if (spinner) spinner.style.display = 'none';
 
         // Show user-friendly error message
         const errorDiv = document.createElement('div');
