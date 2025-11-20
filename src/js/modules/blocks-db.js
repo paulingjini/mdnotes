@@ -380,6 +380,7 @@ function createBlocksDatabase() {
 
         return markdown;
     }
+    } // End of BlocksDatabase class
 
     return BlocksDatabase;
 }
