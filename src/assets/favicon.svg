@@ -1,0 +1,22 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="faviconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect x="0" y="0" width="32" height="32" rx="6" fill="url(#faviconGradient)"/>
+
+  <!-- Simplified M letter in white -->
+  <path d="M 6 22 L 6 10 L 11 15 L 16 10 L 21 15 L 26 10 L 26 22"
+        stroke="white"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"/>
+
+  <!-- Small fold indicator -->
+  <path d="M 26 10 L 26 7 L 23 10 Z" fill="white" opacity="0.5"/>
+</svg>

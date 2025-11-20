@@ -1,0 +1,14 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Pencil -->
+  <path d="M 14 3 L 17 6 L 7 16 L 3 17 L 4 13 Z"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linejoin="round"
+        fill="none"/>
+
+  <!-- Pencil tip detail -->
+  <path d="M 12.5 4.5 L 15.5 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Writing line -->
+  <path d="M 6 15 L 3 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
