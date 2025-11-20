@@ -4167,7 +4167,7 @@ class AdvancedFileSystem {
  * Notion-style block-based editor persistence
  *
  * Note: Requires Dexie.js to be loaded globally via CDN
- * <script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"></script>
+ * Example: <script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"><\/script>
  */
 
 // Function to create the BlocksDatabase class only when Dexie is available
@@ -6923,6 +6923,12 @@ class PresentationTemplates {
      * Inject logo into presentation
      */
     injectLogo(logoConfig) {
+        // Validate logoConfig
+        if (!logoConfig || !logoConfig.url) {
+            console.warn('injectLogo called without valid logoConfig.url');
+            return;
+        }
+
         // Remove existing logo
         const existingLogo = document.getElementById('presentation-logo');
         if (existingLogo) {
@@ -6933,8 +6939,8 @@ class PresentationTemplates {
         logoEl.id = 'presentation-logo';
         logoEl.style.position = 'fixed';
         logoEl.style.zIndex = '100';
-        logoEl.style.width = logoConfig.width;
-        logoEl.style.height = logoConfig.height;
+        logoEl.style.width = logoConfig.width || '100px';
+        logoEl.style.height = logoConfig.height || '100px';
 
         // Position
         const positions = {
