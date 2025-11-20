@@ -48,6 +48,7 @@ console.log('📦 Processing JavaScript modules...');
 const jsModules = [
     'modules/storage.js',
     'modules/theme.js',
+    'modules/toast.js',
     'modules/layout-manager.js',
     'modules/file-manager.js',
     'modules/file-system-advanced.js',

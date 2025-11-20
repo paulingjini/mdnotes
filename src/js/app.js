@@ -5,6 +5,7 @@
 
 import { Storage } from './modules/storage.js';
 import { Theme } from './modules/theme.js';
+import { Toast } from './modules/toast.js';
 import { LayoutManager } from './modules/layout-manager.js';
 import { AdvancedFileSystem } from './modules/file-system-advanced.js';
 import { Editor } from './modules/editor.js';
@@ -84,6 +85,9 @@ class MDNotesApp {
 
         // Apply theme
         this.theme.apply(this.settings.theme);
+
+        // Initialize toast notifications
+        Toast.init();
 
         // Initialize layout manager (modern UI)
         this.layoutManager = new LayoutManager();
@@ -559,22 +563,17 @@ class MDNotesApp {
     }
 
     /**
-     * Show notification
+     * Show notification using modern toast system
      */
     showNotification(message, type = 'info') {
+        // Use new toast notification system
+        Toast.show(message, type, 3000);
+
+        // Also update status bar for backward compatibility
         const statusLeft = document.getElementById('statusLeft');
-        if (!statusLeft) return;
-
-        const originalText = statusLeft.textContent;
-        const originalColor = statusLeft.style.color;
-
-        statusLeft.style.color = type === 'error' ? '#f44336' : '#4caf50';
-        statusLeft.textContent = message;
-
-        setTimeout(() => {
-            statusLeft.textContent = originalText;
-            statusLeft.style.color = originalColor;
-        }, 3000);
+        if (statusLeft) {
+            statusLeft.textContent = message;
+        }
     }
 
     /**
